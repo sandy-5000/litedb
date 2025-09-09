@@ -1,7 +1,7 @@
 #pragma once
 #include <string>
 
-namespace mongolite::thread_test {
+namespace litedb::thread_test {
 
 
 void doWork(int id, const std::string& name, double value);
