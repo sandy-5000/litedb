@@ -36,7 +36,7 @@ constexpr std::size_t P_PARENT_OFFSET     = 40;
 
 class Page {
 private:
-    std::size_t id_;
+    std::uint32_t id_;
     char data_[litedb::constants::PAGE_SIZE];
     mutable std::shared_mutex mtx_;
 

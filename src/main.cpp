@@ -18,6 +18,7 @@ int32_t main(int argc, char* argv[]) {
     try {
         litedb::config::initDbPath(argv[1]);
         std::cout << "DB Path set to: " << litedb::config::DB_FILE_PATH << "\n";
+        litedb::config::releaseDbPath();
     } catch (const std::exception& ex) {
         std::cerr << "Error: " << ex.what() << "\n";
         return 1;

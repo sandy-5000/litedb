@@ -1,6 +1,11 @@
 #!/bin/bash
 
-g++ -std=c++20 -Iinclude src/main.cpp src/thread_test.cpp src/page.cpp -o litedb.out
+g++ -std=c++20 -Iinclude \
+    src/thread_test.cpp \
+    src/db_config.cpp \
+    src/main.cpp \
+    src/page.cpp \
+    -o litedb.out
 
 
 if [ $? -eq 0 ]; then
