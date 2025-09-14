@@ -39,8 +39,8 @@ int32_t main(int argc, char* argv[]) {
     // litedb::thread_test::launchThreads(1024); // testing threads
     litedb::page::Page page(1);
     page.lockUnique();
-    page.setFreeSpace(1234);
-    page.setChecksum(5);
+    page.setFreeSpace(1024);
+    page.setChecksum(996);
     page.printHeader();
     std::cout << page.getFreeSpace() << std::endl;
     page.unlockUnique();

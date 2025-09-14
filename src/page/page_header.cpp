@@ -43,7 +43,9 @@ std::uint32_t PageHeader::getLowestKey() const { return readValue<std::uint32_t>
 void PageHeader::setLowestKey(std::uint32_t k) { writeValue<std::uint32_t>(LOWEST_KEY, k); }
 
 void PageHeader::printHeader() const {
-    std::cout << "--- Page header ---" << std::endl;
+    std::cout << "------ Page header ---"
+              << " (" << getId() << ")"
+              << std::endl;
     for (int i = 0; i < PAGE_HEADER_SIZE; ++i) {
         std::printf("%02X ", data_[i]);
         if ((i + 1) % 8 == 0) std::cout << std::endl;
