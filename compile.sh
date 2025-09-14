@@ -4,7 +4,8 @@ g++ -std=c++20 -Iinclude \
     src/thread_test.cpp \
     src/db_config.cpp \
     src/main.cpp \
-    src/page.cpp \
+    src/page/page_header.cpp \
+    src/page/page.cpp \
     -o litedb.out
 
 

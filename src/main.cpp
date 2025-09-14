@@ -1,7 +1,7 @@
 #include <iostream>
 #include <thread>
 
-#include "litedb/page.hpp"
+#include "litedb/page/page.hpp"
 #include "litedb/thread_test.hpp"
 #include "litedb/db_config.hpp"
 
@@ -37,6 +37,13 @@ int32_t main(int argc, char* argv[]) {
               << " threads\n";
 
     // litedb::thread_test::launchThreads(1024); // testing threads
+    litedb::page::Page page(1);
+    page.lockUnique();
+    page.setFreeSpace(1234);
+    page.setChecksum(5);
+    page.printHeader();
+    std::cout << page.getFreeSpace() << std::endl;
+    page.unlockUnique();
 
     return 0;
 }
