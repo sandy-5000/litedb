@@ -1,6 +1,6 @@
 #pragma once
 
-#include "litedb/page.hpp"
+#include "litedb/page/page.hpp"
 
 namespace litedb::buffer_manager {
 
@@ -10,7 +10,9 @@ private:
     std::array<litedb::page::Page, litedb::constants::BUFFER_MANAGER_SIZE> pages_;
 
 public:
-    BufferManager(std::size_t num_pages);
+    BufferManager();
+
+    litedb::page::Page* getPage(size_t page_id);
 };
 
 

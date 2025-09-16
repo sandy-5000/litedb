@@ -1,3 +1,4 @@
+#pragma once
 #include <cstdint>
 #include <shared_mutex>
 #include <vector>
@@ -6,23 +7,33 @@
 
 #include "litedb/constants.hpp"
 #include "litedb/page/page_header.hpp"
+#include "litedb/page/page_io.hpp"
 
 namespace litedb::page {
 
 
 class Page : public PageHeader {
 private:
-    std::uint32_t id_;
+    uint32_t id_;
     uint8_t data_[litedb::constants::PAGE_SIZE];
     mutable std::shared_mutex mtx_;
+    bool dirty_ = false;
 
 public:
-    Page(std::uint32_t id);
+    Page();
+    Page(uint32_t id);
 
     inline void lockShared()   const { mtx_.lock_shared(); }
     inline void unlockShared() const { mtx_.unlock_shared(); }
     inline void lockUnique()   const { mtx_.lock(); }
     inline void unlockUnique() const { mtx_.unlock(); }
+
+    ssize_t read(uint32_t page_id);
+    ssize_t forceRead(uint32_t page_id);
+    ssize_t write();
+
+    void setDirty();
+    bool isDirty();
 };
 
 

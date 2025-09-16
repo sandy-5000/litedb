@@ -9,11 +9,8 @@
 namespace litedb::config {
 
 
-inline std::string DB_FILE_PATH;
-inline int DB_FILE_DESCRIPTOR = -1;
-
 void initDbPath(const std::string& path);
-
 void releaseDbPath();
+
 
 }

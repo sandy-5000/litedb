@@ -2,8 +2,10 @@
 #include <thread>
 
 #include "litedb/page/page.hpp"
+#include "litedb/buffer_manager.hpp"
 #include "litedb/thread_test.hpp"
-#include "litedb/db_config.hpp"
+#include "litedb/config.hpp"
+#include "litedb/db_globals.hpp"
 
 
 int32_t main(int argc, char* argv[]) {
@@ -17,8 +19,8 @@ int32_t main(int argc, char* argv[]) {
 
     try {
         litedb::config::initDbPath(argv[1]);
-        std::cout << "DB Path set to: " << litedb::config::DB_FILE_PATH << "\n";
-        litedb::config::releaseDbPath();
+        std::cout << "DB Path set to: " << DB_FILE_PATH << "\n";
+        std::cout << "File Descriptor: " << DB_FILE_DESCRIPTOR << "\n";
     } catch (const std::exception& ex) {
         std::cerr << "Error: " << ex.what() << "\n";
         return 1;
@@ -37,13 +39,16 @@ int32_t main(int argc, char* argv[]) {
               << " threads\n";
 
     // litedb::thread_test::launchThreads(1024); // testing threads
-    litedb::page::Page page(1);
-    page.lockUnique();
-    page.setFreeSpace(1024);
-    page.setChecksum(996);
-    page.printHeader();
-    std::cout << page.getFreeSpace() << std::endl;
-    page.unlockUnique();
+    litedb::buffer_manager::BufferManager bufferManager;
 
+    litedb::page::Page* page = bufferManager.getPage(2);
+    // page->lockUnique();
+    // page->setFreeSpace(1024);
+    // page->setChecksum(996);
+    page->printHeader();
+    // std::cout << page->getFreeSpace() << std::endl;
+    // page->unlockUnique();
+
+    litedb::config::releaseDbPath();
     return 0;
 }
