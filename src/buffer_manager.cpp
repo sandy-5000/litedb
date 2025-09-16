@@ -4,7 +4,7 @@ namespace litedb::buffer_manager {
 
 
 BufferManager::BufferManager() {
-    std::cout << "Buffer Manager created" << std::endl;
+    // std::cout << "Buffer Manager created" << std::endl;
 }
 
 litedb::page::Page* BufferManager::getPage(size_t page_id) {
