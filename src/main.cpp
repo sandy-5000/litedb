@@ -19,24 +19,26 @@ int32_t main(int argc, char* argv[]) {
 
     try {
         litedb::config::initDbPath(argv[1]);
-        std::cout << "DB Path set to: " << DB_FILE_PATH << "\n";
-        std::cout << "File Descriptor: " << DB_FILE_DESCRIPTOR << "\n";
     } catch (const std::exception& ex) {
         std::cerr << "Error: " << ex.what() << "\n";
         return 1;
     }
 
 
-    std::cout << "***** LiteDB *****" << std::endl;
-    std::cout << "Built std: " << __cplusplus << std::endl;
-    std::cout << "Using Page Size: " << litedb::constants::PAGE_SIZE << std::endl;
-    std::cout << "Using File: " << file_path << std::endl;
+    std::cout << std::endl;
+    std::cout << "********** LiteDB **********" << std::endl;
+    std::cout << "  Built std: " << __cplusplus << std::endl;
+    std::cout << "  Using Page Size: " << litedb::constants::PAGE_SIZE << std::endl;
+    std::cout << "  Using File: " << litedb::g::DB_FILE_PATH << std::endl;
 
     // threads info
     int os_threads_count = std::thread::hardware_concurrency();
-    std::cout << "Hardware concurrency: "
+    std::cout << "  Hardware concurrency: "
               << os_threads_count
               << " threads\n";
+    std::cout << std::endl
+              << std::endl
+              << std::endl;
 
     // litedb::thread_test::launchThreads(1024); // testing threads
     litedb::buffer_manager::BufferManager bufferManager;

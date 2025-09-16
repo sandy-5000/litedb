@@ -17,8 +17,8 @@ void initDbPath(const std::string& path) {
         if (fd == -1) {
             throw std::runtime_error("Failed to create database file");
         }
-        DB_FILE_DESCRIPTOR = fd;
-        DB_FILE_PATH = path;
+        litedb::g::DB_FILE_DESCRIPTOR = fd;
+        litedb::g::DB_FILE_PATH = path;
         for (uint32_t i = 0; i < 3; ++i) {
             litedb::page::Page page(i);
             page.setType(i);
@@ -33,9 +33,8 @@ void initDbPath(const std::string& path) {
         if (fd == -1) {
             throw std::runtime_error("Failed to open database file");
         }
-        std::cout << "File D: " << fd << std::endl;
-        DB_FILE_DESCRIPTOR = fd;
-        DB_FILE_PATH = path;
+        litedb::g::DB_FILE_DESCRIPTOR = fd;
+        litedb::g::DB_FILE_PATH = path;
     }
 
     struct flock fl{};
@@ -51,16 +50,16 @@ void initDbPath(const std::string& path) {
 }
 
 void releaseDbPath() {
-    if (DB_FILE_DESCRIPTOR != -1) {
+    if (litedb::g::DB_FILE_DESCRIPTOR != -1) {
         struct flock fl{};
         fl.l_type = F_UNLCK;
         fl.l_whence = SEEK_SET;
         fl.l_start = 0;
         fl.l_len = 0;
 
-        fcntl(DB_FILE_DESCRIPTOR, F_SETLK, &fl);
-        ::close(DB_FILE_DESCRIPTOR);
-        DB_FILE_DESCRIPTOR = -1;
+        fcntl(litedb::g::DB_FILE_DESCRIPTOR, F_SETLK, &fl);
+        ::close(litedb::g::DB_FILE_DESCRIPTOR);
+        litedb::g::DB_FILE_DESCRIPTOR = -1;
     }
 }
 
