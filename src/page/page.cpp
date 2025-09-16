@@ -6,7 +6,7 @@ namespace litedb::page {
 Page::Page() : Page(-1) {}
 
 Page::Page(uint32_t id) : id_(id), PageHeader(data_, &mtx_) {
-    std::unique_lock lock(mtx_);
+    // std::unique_lock lock(mtx_);
     std::memset(data_, 0, litedb::constants::PAGE_SIZE);
     writeValue(PAGE_ID_OFFSET, id);
 }
@@ -19,7 +19,7 @@ ssize_t Page::read(uint32_t page_id) {
 }
 
 ssize_t Page::forceRead(uint32_t page_id) {
-    std::unique_lock lock(mtx_);
+    // std::unique_lock lock(mtx_);
     if (page_id == static_cast<uint32_t>(-1)) {
         throw std::runtime_error("Invalid page id for read()");
     }
@@ -29,7 +29,7 @@ ssize_t Page::forceRead(uint32_t page_id) {
 }
 
 ssize_t Page::write() {
-    std::unique_lock lock(mtx_);
+    // std::unique_lock lock(mtx_);
     if (id_ == static_cast<uint32_t>(-1)) {
         return -1;
     }
