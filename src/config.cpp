@@ -1,10 +1,10 @@
 #include "litedb/config.hpp"
 #include "litedb/page/page.hpp"
-#include "litedb/db_globals.hpp"
+#include "litedb/globals.hpp"
 
 namespace litedb::config {
 
-void initDbPath(const std::string& path) {
+void init_db_path(const std::string& path) {
     namespace fs = std::filesystem;
 
     if (fs::path(path).extension() != ".ldb") {
@@ -19,12 +19,10 @@ void initDbPath(const std::string& path) {
         }
         litedb::g::DB_FILE_DESCRIPTOR = fd;
         litedb::g::DB_FILE_PATH = path;
-        for (uint32_t i = 0; i < 3; ++i) {
-            litedb::page::Page page(i);
-            page.setType(i);
-            page.setFreeSpace(litedb::constants::PAGE_SIZE - litedb::page::PAGE_HEADER_SIZE);
-            page.write();
-        }
+        litedb::g::pages_count = 3;
+        set_root_page();
+        set_page_manager_root();
+        set_empty_page(2, 2);
     } else {
         if (!fs::is_regular_file(path)) {
             throw std::invalid_argument("Database file is not a regular file");
@@ -33,8 +31,21 @@ void initDbPath(const std::string& path) {
         if (fd == -1) {
             throw std::runtime_error("Failed to open database file");
         }
+        struct stat st;
+        if (::fstat(fd, &st) == -1) {
+            ::close(fd);
+            throw std::runtime_error("Failed to stat database file");
+        }
+        if (
+            st.st_size % litedb::constants::PAGE_SIZE != 0 ||
+            st.st_size < static_cast<off_t>(litedb::constants::PAGE_SIZE * 3)
+        ) {
+            ::close(fd);
+            throw std::runtime_error("Database file is not valid");
+        }
         litedb::g::DB_FILE_DESCRIPTOR = fd;
         litedb::g::DB_FILE_PATH = path;
+        litedb::g::pages_count = st.st_size / litedb::constants::PAGE_SIZE;
     }
 
     struct flock fl{};
@@ -49,7 +60,7 @@ void initDbPath(const std::string& path) {
     }
 }
 
-void releaseDbPath() {
+void release_db_path() {
     if (litedb::g::DB_FILE_DESCRIPTOR != -1) {
         struct flock fl{};
         fl.l_type = F_UNLCK;
@@ -61,6 +72,27 @@ void releaseDbPath() {
         ::close(litedb::g::DB_FILE_DESCRIPTOR);
         litedb::g::DB_FILE_DESCRIPTOR = -1;
     }
+}
+
+void set_root_page() {
+    set_empty_page(0, 0);
+}
+
+void set_empty_page(uint32_t page_id, uint8_t page_type) {
+    litedb::page::Page page(page_id);
+    page.setType(page_type);
+    page.setFreeSpace(litedb::constants::PAGE_SIZE - litedb::page::PAGE_HEADER_SIZE);
+    page.setNextPage(-1);
+    page.write();
+}
+
+void set_page_manager_root() {
+    litedb::page::Page page(1);
+    page.setType(1);
+    page.setFreeSpace(litedb::constants::PAGE_SIZE - litedb::page::PAGE_HEADER_SIZE);
+    page.setNextPage(-1);
+    page.setPossibleParent(1);
+    page.write();
 }
 
 }

@@ -20,7 +20,7 @@ ssize_t Page::read(uint32_t page_id) {
 
 ssize_t Page::forceRead(uint32_t page_id) {
     // std::unique_lock lock(mtx_);
-    if (page_id == static_cast<uint32_t>(-1)) {
+    if (static_cast<uint32_t>(-1)== page_id) {
         throw std::runtime_error("Invalid page id for read()");
     }
     ssize_t byte_count = PageIO::readPage(page_id, data_);
@@ -30,7 +30,7 @@ ssize_t Page::forceRead(uint32_t page_id) {
 
 ssize_t Page::write() {
     // std::unique_lock lock(mtx_);
-    if (id_ == static_cast<uint32_t>(-1)) {
+    if (static_cast<uint32_t>(-1) == id_) {
         return -1;
     }
     ssize_t byte_count = PageIO::writePage(id_, data_);
@@ -44,6 +44,10 @@ void Page::setDirty() {
 
 bool Page::isDirty() {
     return dirty_;
+}
+
+bool Page::isEmpty() {
+    return 0 == getRecordCount();
 }
 
 

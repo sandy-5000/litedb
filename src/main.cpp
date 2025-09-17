@@ -5,7 +5,8 @@
 #include "litedb/buffer_manager.hpp"
 #include "litedb/thread_test.hpp"
 #include "litedb/config.hpp"
-#include "litedb/db_globals.hpp"
+#include "litedb/globals.hpp"
+#include "litedb/engine.hpp"
 
 
 int32_t main(int argc, char* argv[]) {
@@ -16,9 +17,13 @@ int32_t main(int argc, char* argv[]) {
 
     /** LiteDB Info for user */
     std::string file_path = std::string(argv[1]);
+    litedb::buffer_manager::BufferManager bufferManager;
+    litedb::page_manager::PageManager pageManager;
 
     try {
-        litedb::config::initDbPath(argv[1]);
+        litedb::config::init_db_path(argv[1]);
+        litedb::engine::buffer_manager = &bufferManager;
+        litedb::engine::page_manager = &pageManager;
     } catch (const std::exception& ex) {
         std::cerr << "Error: " << ex.what() << "\n";
         return 1;
@@ -41,16 +46,12 @@ int32_t main(int argc, char* argv[]) {
               << std::endl;
 
     // litedb::thread_test::launchThreads(1024); // testing threads
-    litedb::buffer_manager::BufferManager bufferManager;
 
-    litedb::page::Page* page = bufferManager.getPage(2);
-    // page->lockUnique();
-    // page->setFreeSpace(1024);
-    // page->setChecksum(996);
-    page->printHeader();
-    // std::cout << page->getFreeSpace() << std::endl;
-    // page->unlockUnique();
+    for (uint32_t i = 0; i < 3; ++i) {
+        litedb::page::Page* page = litedb::engine::buffer_manager->getPage(i);
+        page->printHeader();
+    }
 
-    litedb::config::releaseDbPath();
+    litedb::config::release_db_path();
     return 0;
 }

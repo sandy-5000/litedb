@@ -1,12 +1,15 @@
 #pragma once
+
 #include <mutex>
 #include <shared_mutex>
 #include <iostream>
 
+#include "litedb/constants.hpp"
+
 namespace litedb::page {
 
 
-constexpr std::size_t PAGE_HEADER_SIZE = 64;
+constexpr std::size_t PAGE_HEADER_SIZE = litedb::constants::PAGE_HEADER_SIZE;
 
 // 8 Bytes
 constexpr std::size_t PAGE_ID_OFFSET      = 0;
