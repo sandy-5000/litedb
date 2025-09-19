@@ -9,7 +9,7 @@
 namespace litedb::page {
 
 
-constexpr std::size_t PAGE_HEADER_SIZE = litedb::constants::PAGE_HEADER_SIZE;
+constexpr std::size_t PAGE_HEADER_SIZE    = litedb::constants::PAGE_HEADER_SIZE;
 
 // 8 Bytes
 constexpr std::size_t PAGE_ID_OFFSET      = 0;
@@ -33,23 +33,24 @@ constexpr std::size_t MAX_KEY_OFFSET      = 32;
 
 // 8 Bytes
 constexpr std::size_t P_PARENT_OFFSET     = 40;
-constexpr std::size_t LOWEST_KEY          = 44;
+constexpr std::size_t LEFT_MOST_CHILD     = 44;
 
 class PageHeader {
 protected:
     uint8_t* data_;
     mutable std::shared_mutex* mtx_;
 
+public:
     template<typename T>
     T readValue(std::size_t offset) const;
 
     template<typename T>
     void writeValue(std::size_t offset, const T value);
 
-public:
     PageHeader(uint8_t* data, std::shared_mutex* mtx);
 
     std::uint32_t getId() const;
+    void setId(std::uint8_t);
 
     std::uint8_t getType() const;
     void setType(std::uint8_t);
@@ -81,8 +82,8 @@ public:
     std::uint32_t getPossibleParent() const;
     void setPossibleParent(std::uint32_t);
 
-    std::uint32_t getLowestKey() const;
-    void setLowestKey(std::uint32_t);
+    std::uint32_t getLeftMostChild() const;
+    void setLeftMostChild(std::uint32_t);
 
     void printHeader() const;
 };

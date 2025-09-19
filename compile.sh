@@ -7,7 +7,6 @@ g++ -std=c++20 -Iinclude \
     src/page/page_header.cpp \
     src/page/page_io.cpp \
     src/page/page.cpp \
-    src/page_manager.cpp \
     src/buffer_manager.cpp \
     src/engine.cpp \
     src/main.cpp \

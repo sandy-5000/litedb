@@ -8,6 +8,7 @@ PageHeader::PageHeader(uint8_t* data, std::shared_mutex* mtx)
 
 // ===== Accessors =====
 std::uint32_t PageHeader::getId() const { return readValue<std::uint32_t>(PAGE_ID_OFFSET); }
+void PageHeader::setId(std::uint8_t t) { writeValue<std::uint8_t>(PAGE_ID_OFFSET, t); }
 
 std::uint8_t PageHeader::getType() const { return readValue<std::uint8_t>(PAGE_TYPE_OFFSET); }
 void PageHeader::setType(std::uint8_t t) { writeValue<std::uint8_t>(PAGE_TYPE_OFFSET, t); }
@@ -39,8 +40,8 @@ void PageHeader::setMaxKey(std::uint64_t key) { writeValue<std::uint64_t>(MAX_KE
 std::uint32_t PageHeader::getPossibleParent() const { return readValue<std::uint32_t>(P_PARENT_OFFSET); }
 void PageHeader::setPossibleParent(std::uint32_t p) { writeValue<std::uint32_t>(P_PARENT_OFFSET, p); }
 
-std::uint32_t PageHeader::getLowestKey() const { return readValue<std::uint32_t>(LOWEST_KEY); }
-void PageHeader::setLowestKey(std::uint32_t k) { writeValue<std::uint32_t>(LOWEST_KEY, k); }
+std::uint32_t PageHeader::getLeftMostChild() const { return readValue<std::uint32_t>(LEFT_MOST_CHILD); }
+void PageHeader::setLeftMostChild(std::uint32_t k) { writeValue<std::uint32_t>(LEFT_MOST_CHILD, k); }
 
 void PageHeader::printHeader() const {
     std::cout << "------ Page header ---"

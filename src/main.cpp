@@ -18,12 +18,10 @@ int32_t main(int argc, char* argv[]) {
     /** LiteDB Info for user */
     std::string file_path = std::string(argv[1]);
     litedb::buffer_manager::BufferManager bufferManager;
-    litedb::page_manager::PageManager pageManager;
 
     try {
         litedb::config::init_db_path(argv[1]);
         litedb::engine::buffer_manager = &bufferManager;
-        litedb::engine::page_manager = &pageManager;
     } catch (const std::exception& ex) {
         std::cerr << "Error: " << ex.what() << "\n";
         return 1;
@@ -47,7 +45,7 @@ int32_t main(int argc, char* argv[]) {
 
     // litedb::thread_test::launchThreads(1024); // testing threads
 
-    for (uint32_t i = 0; i < 3; ++i) {
+    for (uint32_t i = 0; i < 2; ++i) {
         litedb::page::Page* page = litedb::engine::buffer_manager->getPage(i);
         page->printHeader();
     }

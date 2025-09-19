@@ -19,10 +19,9 @@ void init_db_path(const std::string& path) {
         }
         litedb::g::DB_FILE_DESCRIPTOR = fd;
         litedb::g::DB_FILE_PATH = path;
-        litedb::g::pages_count = 3;
+        litedb::g::pages_count = 2;
         set_root_page();
-        set_page_manager_root();
-        set_empty_page(2, 2);
+        set_empty_page(1, 2);
     } else {
         if (!fs::is_regular_file(path)) {
             throw std::invalid_argument("Database file is not a regular file");
@@ -38,7 +37,7 @@ void init_db_path(const std::string& path) {
         }
         if (
             st.st_size % litedb::constants::PAGE_SIZE != 0 ||
-            st.st_size < static_cast<off_t>(litedb::constants::PAGE_SIZE * 3)
+            st.st_size < static_cast<off_t>(litedb::constants::PAGE_SIZE * 2)
         ) {
             ::close(fd);
             throw std::runtime_error("Database file is not valid");
@@ -75,23 +74,18 @@ void release_db_path() {
 }
 
 void set_root_page() {
-    set_empty_page(0, 0);
+    litedb::page::Page page(0);
+    page.setType(0);
+    page.setFreeSpace(litedb::constants::PAGE_SIZE - litedb::constants::PAGE_HEADER_SIZE);
+    page.setNextPage(0);
+    page.write();
 }
 
 void set_empty_page(uint32_t page_id, uint8_t page_type) {
     litedb::page::Page page(page_id);
     page.setType(page_type);
-    page.setFreeSpace(litedb::constants::PAGE_SIZE - litedb::page::PAGE_HEADER_SIZE);
-    page.setNextPage(-1);
-    page.write();
-}
-
-void set_page_manager_root() {
-    litedb::page::Page page(1);
-    page.setType(1);
-    page.setFreeSpace(litedb::constants::PAGE_SIZE - litedb::page::PAGE_HEADER_SIZE);
-    page.setNextPage(-1);
-    page.setPossibleParent(1);
+    page.setFreeSpace(litedb::constants::PAGE_SIZE - litedb::constants::PAGE_HEADER_SIZE);
+    page.setNextPage(0);
     page.write();
 }
 

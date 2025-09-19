@@ -35,6 +35,7 @@ public:
     void setDirty();
     bool isDirty();
     bool isEmpty();
+    void clear();
 };
 
 

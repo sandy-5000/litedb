@@ -23,6 +23,7 @@ ssize_t Page::forceRead(uint32_t page_id) {
     if (static_cast<uint32_t>(-1)== page_id) {
         throw std::runtime_error("Invalid page id for read()");
     }
+    id_ = page_id;
     ssize_t byte_count = PageIO::readPage(page_id, data_);
     dirty_ = false;
     return byte_count;
@@ -48,6 +49,11 @@ bool Page::isDirty() {
 
 bool Page::isEmpty() {
     return 0 == getRecordCount();
+}
+
+void Page::clear() {
+    id_ = -1;
+    std::memset(data_, 0, litedb::constants::PAGE_SIZE);
 }
 
 

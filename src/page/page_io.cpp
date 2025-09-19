@@ -1,5 +1,4 @@
 #include "litedb/page/page_io.hpp"
-#include "litedb/globals.hpp"
 
 namespace litedb::page {
 
