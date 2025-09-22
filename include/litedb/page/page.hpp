@@ -21,13 +21,15 @@ private:
 
 public:
     Page();
-    Page(uint32_t id);
+    ~Page();
 
     inline void lockShared()   const { mtx_.lock_shared(); }
     inline void unlockShared() const { mtx_.unlock_shared(); }
     inline void lockUnique()   const { mtx_.lock(); }
     inline void unlockUnique() const { mtx_.unlock(); }
 
+    uint32_t id() const;
+    void readEmpty(uint32_t page_id);
     ssize_t read(uint32_t page_id);
     ssize_t forceRead(uint32_t page_id);
     ssize_t write();

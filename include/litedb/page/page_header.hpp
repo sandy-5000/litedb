@@ -8,6 +8,7 @@
 
 namespace litedb::page {
 
+constexpr uint32_t INVALID_PAGE_ID        = 0xFFFFFFFF;
 
 constexpr std::size_t PAGE_HEADER_SIZE    = litedb::constants::PAGE_HEADER_SIZE;
 
@@ -38,7 +39,6 @@ constexpr std::size_t LEFT_MOST_CHILD     = 44;
 class PageHeader {
 protected:
     uint8_t* data_;
-    mutable std::shared_mutex* mtx_;
 
 public:
     template<typename T>
@@ -47,10 +47,10 @@ public:
     template<typename T>
     void writeValue(std::size_t offset, const T value);
 
-    PageHeader(uint8_t* data, std::shared_mutex* mtx);
+    PageHeader(uint8_t* data);
 
     std::uint32_t getId() const;
-    void setId(std::uint8_t);
+    void setId(std::uint32_t);
 
     std::uint8_t getType() const;
     void setType(std::uint8_t);
@@ -91,14 +91,12 @@ public:
 template <typename T>
 inline T PageHeader::readValue(std::size_t offset) const {
     static_assert(std::is_integral<T>::value, "T must be an integral type");
-    // std::shared_lock lock(*mtx_);
     return *reinterpret_cast<const T*>(data_ + offset);
 }
 
 template <typename T>
 inline void PageHeader::writeValue(std::size_t offset, const T value) {
     static_assert(std::is_integral<T>::value, "T must be an integral type");
-    // std::unique_lock lock(*mtx_);
     *reinterpret_cast<T*>(data_ + offset) = value;
 }
 

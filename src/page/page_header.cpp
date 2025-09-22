@@ -3,12 +3,11 @@
 namespace litedb::page {
 
 
-PageHeader::PageHeader(uint8_t* data, std::shared_mutex* mtx)
-    : data_(data), mtx_(mtx) {}
+PageHeader::PageHeader(uint8_t* data) : data_(data) {}
 
 // ===== Accessors =====
 std::uint32_t PageHeader::getId() const { return readValue<std::uint32_t>(PAGE_ID_OFFSET); }
-void PageHeader::setId(std::uint8_t t) { writeValue<std::uint8_t>(PAGE_ID_OFFSET, t); }
+void PageHeader::setId(std::uint32_t t) { writeValue<std::uint32_t>(PAGE_ID_OFFSET, t); }
 
 std::uint8_t PageHeader::getType() const { return readValue<std::uint8_t>(PAGE_TYPE_OFFSET); }
 void PageHeader::setType(std::uint8_t t) { writeValue<std::uint8_t>(PAGE_TYPE_OFFSET, t); }

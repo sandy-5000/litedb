@@ -74,7 +74,8 @@ void release_db_path() {
 }
 
 void set_root_page() {
-    litedb::page::Page page(0);
+    litedb::page::Page page;
+    page.readEmpty(0);
     page.setType(0);
     page.setFreeSpace(litedb::constants::PAGE_SIZE - litedb::constants::PAGE_HEADER_SIZE);
     page.setNextPage(0);
@@ -82,7 +83,8 @@ void set_root_page() {
 }
 
 void set_empty_page(uint32_t page_id, uint8_t page_type) {
-    litedb::page::Page page(page_id);
+    litedb::page::Page page;
+    page.readEmpty(page_id);
     page.setType(page_type);
     page.setFreeSpace(litedb::constants::PAGE_SIZE - litedb::constants::PAGE_HEADER_SIZE);
     page.setNextPage(0);

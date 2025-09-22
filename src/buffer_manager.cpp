@@ -48,7 +48,8 @@ void BufferManager::addFreePage(uint32_t page_id) {
     std::unique_lock lock(mtx_);
     uint32_t p_page_id = root.getLeftMostChild();
     if (0 == p_page_id) {
-        top = new litedb::page::Page(page_id);
+        top = new litedb::page::Page();
+        top->readEmpty(page_id);
     } else {
         top->read(page_id);
     }

@@ -3,39 +3,63 @@
 namespace litedb::page {
 
 
-Page::Page() : Page(-1) {}
+Page::Page() : PageHeader(data_) {
+    clear();
+}
 
-Page::Page(uint32_t id) : id_(id), PageHeader(data_, &mtx_) {
-    // std::unique_lock lock(mtx_);
-    std::memset(data_, 0, litedb::constants::PAGE_SIZE);
-    writeValue(PAGE_ID_OFFSET, id);
+Page::~Page() {
+    if (dirty_)  {
+        write();
+    }
+}
+
+uint32_t Page::id() const {
+    return id_;
+}
+
+void Page::readEmpty(uint32_t page_id) {
+    id_ = page_id;
+    if (getId() == id_) {
+        dirty_ = false;
+    } else {
+        setId(id_);
+        dirty_ = true;
+    }
 }
 
 ssize_t Page::read(uint32_t page_id) {
-    if (page_id == id_) {
+    if (page_id != INVALID_PAGE_ID && page_id == id_) {
         return litedb::constants::PAGE_SIZE;
     }
     return forceRead(page_id);
 }
 
 ssize_t Page::forceRead(uint32_t page_id) {
-    // std::unique_lock lock(mtx_);
-    if (static_cast<uint32_t>(-1)== page_id) {
-        throw std::runtime_error("Invalid page id for read()");
+    if (INVALID_PAGE_ID == page_id) {
+        return 0;
+    }
+    if (dirty_) {
+        write();
     }
     id_ = page_id;
-    ssize_t byte_count = PageIO::readPage(page_id, data_);
-    dirty_ = false;
+    ssize_t byte_count = io::read_page(page_id, data_);
+    if (getId() == id_) {
+        dirty_ = false;
+    } else {
+        setId(id_);
+        dirty_ = true;
+    }
     return byte_count;
 }
 
 ssize_t Page::write() {
-    // std::unique_lock lock(mtx_);
-    if (static_cast<uint32_t>(-1) == id_) {
-        return -1;
+    if (INVALID_PAGE_ID == id_) {
+        return 0;
     }
-    ssize_t byte_count = PageIO::writePage(id_, data_);
-    dirty_ = false;
+    ssize_t byte_count = io::write_page(id_, data_);
+    if (byte_count == litedb::constants::PAGE_SIZE) {
+        dirty_ = false;
+    }
     return byte_count;
 }
 
@@ -52,8 +76,10 @@ bool Page::isEmpty() {
 }
 
 void Page::clear() {
-    id_ = -1;
+    id_ = INVALID_PAGE_ID;
     std::memset(data_, 0, litedb::constants::PAGE_SIZE);
+    setId(INVALID_PAGE_ID);
+    dirty_ = false;
 }
 
 
