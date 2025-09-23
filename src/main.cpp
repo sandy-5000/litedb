@@ -46,8 +46,11 @@ int32_t main(int argc, char* argv[]) {
     // litedb::thread_test::launchThreads(1024); // testing threads
 
     for (uint32_t i = 0; i < 2; ++i) {
-        litedb::page::Page* page = litedb::engine::buffer_manager->getPage(i);
+        litedb::page::Page* page = litedb::engine::buffer_manager->getEmptyPage(i);
+        page->lockShared();
+        page->read(i);
         page->printHeader();
+        page->unlockShared();
     }
 
     litedb::config::release_db_path();
