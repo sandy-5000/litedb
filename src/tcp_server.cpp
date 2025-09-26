@@ -52,9 +52,8 @@ void TCPServer::run() {
             if (!running_) {
                 break;
             }
-            perror("select"); {
-                break;
-            }
+            perror("select");
+            break;
         }
         for (int fd = 0; fd <= max_fd_; ++fd) {
             if (FD_ISSET(fd, &read_set)) {
@@ -72,6 +71,11 @@ void TCPServer::run() {
 void TCPServer::accept_new_client() {
     int client_fd = accept(server_fd_, nullptr, nullptr);
     if (client_fd >= 0) {
+        if (clients_.size() >= max_connections) {
+            close(client_fd);
+            std::cout << "Max clients reached. Rejecting new connection.\n";
+            return;
+        }
         FD_SET(client_fd, &master_set_);
         if (client_fd > max_fd_) {
             max_fd_ = client_fd;

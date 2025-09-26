@@ -17,6 +17,7 @@ private:
     int max_fd_;
     std::vector<int> clients_;
     volatile bool running_ = true;
+    const int8_t max_connections = 10;
 
 public:
     TCPServer(int port);
