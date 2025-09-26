@@ -3,6 +3,7 @@
         "*.css": "tailwindcss",
         "chrono": "cpp",
         "type_traits": "cpp",
-        "vector": "cpp"
+        "vector": "cpp",
+        "iostream": "cpp"
     }
 }

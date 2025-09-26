@@ -9,8 +9,11 @@ g++ -std=c++20 -Iinclude \
     src/page/page.cpp \
     src/buffer_manager.cpp \
     src/engine.cpp \
+    src/json.cpp \
+    src/tcp_server.cpp \
     src/main.cpp \
-    -o litedb.out
+    -o litedb.out \
+    $(pkg-config --cflags --libs libmongocxx)
 
 
 if [ $? -eq 0 ]; then

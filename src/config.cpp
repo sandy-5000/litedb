@@ -91,4 +91,19 @@ void set_empty_page(uint32_t page_id, uint8_t page_type) {
     page.write();
 }
 
+void print_hardware_config() {
+    std::cout << std::endl;
+    std::cout << "********** LiteDB **********" << std::endl;
+    std::cout << "  Built std: " << __cplusplus << std::endl;
+    std::cout << "  Using Page Size: " << litedb::constants::PAGE_SIZE << std::endl;
+    std::cout << "  Using File: " << litedb::g::DB_FILE_PATH << std::endl;
+
+    // threads info
+    int os_threads_count = std::thread::hardware_concurrency();
+    std::cout << "  Hardware concurrency: "
+              << os_threads_count
+              << " threads\n";
+    std::cout << std::endl;
+}
+
 }

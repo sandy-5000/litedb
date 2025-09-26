@@ -6,10 +6,11 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <sys/stat.h>
+#include <thread>
 
 namespace litedb::config {
 
-
+void print_hardware_config();
 void init_db_path(const std::string& path);
 void release_db_path();
 void set_root_page();
