@@ -4,14 +4,19 @@ g++ -std=c++20 -Iinclude \
     src/globals.cpp \
     src/thread_test.cpp \
     src/config.cpp \
+    \
     src/page/page_header.cpp \
     src/page/page_io.cpp \
     src/page/page.cpp \
-    src/buffer_manager.cpp \
-    src/engine.cpp \
+    \
+    src/engine/root_manager.cpp \
+    src/engine/buffer_manager.cpp \
+    src/engine/store.cpp \
+    \
     src/json.cpp \
     src/tcp_server.cpp \
     src/main.cpp \
+    \
     -o litedb.out \
     $(pkg-config --cflags --libs libmongocxx)
 

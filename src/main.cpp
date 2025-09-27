@@ -3,11 +3,12 @@
 #include <csignal>
 
 #include "litedb/page/page.hpp"
-#include "litedb/buffer_manager.hpp"
+#include "litedb/engine/root_manager.hpp"
+#include "litedb/engine/buffer_manager.hpp"
+#include "litedb/engine/store.hpp"
 #include "litedb/thread_test.hpp"
 #include "litedb/config.hpp"
 #include "litedb/globals.hpp"
-#include "litedb/engine.hpp"
 #include "litedb/json.hpp"
 #include "litedb/tcp_server.hpp"
 
@@ -34,10 +35,12 @@ int32_t main(int argc, char* argv[]) {
 
     /** LiteDB Info for user */
     std::string file_path = std::string(argv[1]);
+    litedb::root_manager::RootManager rootManager;
     litedb::buffer_manager::BufferManager bufferManager;
 
     try {
         litedb::config::init_db_path(argv[1]);
+        litedb::engine::root_manager = &rootManager;
         litedb::engine::buffer_manager = &bufferManager;
         litedb::config::print_hardware_config();
     } catch (const std::exception& ex) {
