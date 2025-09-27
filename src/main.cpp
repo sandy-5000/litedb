@@ -36,7 +36,7 @@ int32_t main(int argc, char* argv[]) {
     /** LiteDB Info for user */
     std::string file_path = std::string(argv[1]);
     litedb::root_manager::RootManager rootManager;
-    litedb::buffer_manager::BufferManager bufferManager;
+    litedb::buffer_manager::BufferManager bufferManager(100);
 
     try {
         litedb::config::init_db_path(argv[1]);
@@ -48,6 +48,15 @@ int32_t main(int argc, char* argv[]) {
         return 1;
     }
 
+    for (uint32_t i = 0; i < 2; ++i) {
+        std::shared_ptr<litedb::page::Page> page = litedb::engine::buffer_manager->getPage(i);
+        page->lockShared();
+        page->read(i);
+        page->printHeader();
+        page->unlockShared();
+    }
+    std::cout << std::endl;
+
     signal(SIGINT, signal_handler);
     litedb::server::TCPServer server(8008);
     global_server = &server;
@@ -58,14 +67,6 @@ int32_t main(int argc, char* argv[]) {
     pthread_join(server_thread, nullptr);
 
     // litedb::thread_test::launchThreads(1024); // testing threads
-
-    // for (uint32_t i = 0; i < 2; ++i) {
-    //     litedb::page::Page* page = litedb::engine::buffer_manager->getEmptyPage(i);
-    //     page->lockShared();
-    //     page->read(i);
-    //     page->printHeader();
-    //     page->unlockShared();
-    // }
 
     litedb::config::release_db_path();
     std::cout << "Server exited gracefully.\n\n";

@@ -2,19 +2,21 @@
 
 #include "litedb/page/page.hpp"
 #include "litedb/globals.hpp"
+#include "litedb/engine/lru_cache.hpp"
 
 namespace litedb::buffer_manager {
 
 
 class BufferManager {
 private:
-    std::array<litedb::page::Page, litedb::constants::BUFFER_MANAGER_SIZE> pages_;
+    size_t capacity_;
+    litedb::lru_cache::LRUCache<uint32_t, std::shared_ptr<litedb::page::Page>> cache_;
 
 public:
-    BufferManager();
+    BufferManager(size_t capacity);
     ~BufferManager();
 
-    litedb::page::Page* getEmptyPage(size_t page_id);
+    std::shared_ptr<litedb::page::Page> getPage(size_t page_id);
 };
 
 
