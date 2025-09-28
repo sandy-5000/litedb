@@ -71,7 +71,7 @@ void TCPServer::run() {
 void TCPServer::accept_new_client() {
     int client_fd = accept(server_fd_, nullptr, nullptr);
     if (client_fd >= 0) {
-        if (clients_.size() >= max_connections) {
+        if (running_ && clients_.size() >= max_connections) {
             close(client_fd);
             std::cout << "Max clients reached. Rejecting new connection.\n";
             return;
