@@ -36,7 +36,7 @@ int32_t main(int argc, char* argv[]) {
     /** LiteDB Info for user */
     std::string file_path = std::string(argv[1]);
     litedb::root_manager::RootManager rootManager;
-    litedb::buffer_manager::BufferManager bufferManager(100);
+    litedb::buffer_manager::BufferManager bufferManager;
 
     try {
         litedb::config::init_db_path(argv[1]);
@@ -48,14 +48,17 @@ int32_t main(int argc, char* argv[]) {
         return 1;
     }
 
-    for (uint32_t i = 0; i < 2; ++i) {
-        std::shared_ptr<litedb::page::Page> page = litedb::engine::buffer_manager->getPage(i);
-        page->lockShared();
-        page->read(i);
-        page->printHeader();
-        page->unlockShared();
+    auto buffer = litedb::engine::buffer_manager->getBuffer("root");
+    if (buffer) {
+        for (uint32_t i = 0; i < 2; ++i) {
+            std::shared_ptr<litedb::page::Page> page = (*buffer)->getPage(i);
+            page->lockShared();
+            page->read(i);
+            page->printHeader();
+            page->unlockShared();
+        }
+        std::cout << std::endl;
     }
-    std::cout << std::endl;
 
     signal(SIGINT, signal_handler);
     litedb::server::TCPServer server(8008);
