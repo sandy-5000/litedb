@@ -19,7 +19,7 @@ void init_db_path(const std::string& path) {
         }
         litedb::g::DB_FILE_DESCRIPTOR = fd;
         litedb::g::DB_FILE_PATH = path;
-        litedb::g::pages_count = 2;
+        litedb::g::pages_count = 1;
         set_root_page();
     } else {
         if (!fs::is_regular_file(path)) {
