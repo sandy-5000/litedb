@@ -50,13 +50,11 @@ int32_t main(int argc, char* argv[]) {
 
     auto buffer = litedb::engine::buffer_manager->getBuffer("root");
     if (buffer) {
-        for (uint32_t i = 0; i < 2; ++i) {
-            std::shared_ptr<litedb::page::Page> page = (*buffer)->getPage(i);
-            page->lockShared();
-            page->read(i);
-            page->printHeader();
-            page->unlockShared();
-        }
+        std::shared_ptr<litedb::page::Page> page = (*buffer)->getPage(0);
+        page->lockShared();
+        page->read(0);
+        page->printHeader();
+        page->unlockShared();
         std::cout << std::endl;
     }
 

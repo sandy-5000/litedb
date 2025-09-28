@@ -19,14 +19,16 @@ void print_element(const T& element, const std::string& padding = "") {
     std::string key = std::string(element.key());
 
     std::cout << padding;
-    if (!key.empty()) std::cout << key << ": ";
+    if (!key.empty()) {
+        std::cout << "\"" << key << "\": ";
+    }
 
     switch (type) {
         case bsoncxx::type::k_double:
             std::cout << element.get_double() << "\n";
             break;
         case bsoncxx::type::k_string:
-            std::cout << std::string(element.get_string().value) << "\n";
+            std::cout << "\"" << std::string(element.get_string().value) << "\"\n";
             break;
         case bsoncxx::type::k_bool:
             std::cout << (element.get_bool() ? "true" : "false") << "\n";

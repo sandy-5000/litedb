@@ -21,7 +21,6 @@ void init_db_path(const std::string& path) {
         litedb::g::DB_FILE_PATH = path;
         litedb::g::pages_count = 2;
         set_root_page();
-        set_empty_page(1, 2);
     } else {
         if (!fs::is_regular_file(path)) {
             throw std::invalid_argument("Database file is not a regular file");
@@ -37,7 +36,7 @@ void init_db_path(const std::string& path) {
         }
         if (
             st.st_size % litedb::constants::PAGE_SIZE != 0 ||
-            st.st_size < static_cast<off_t>(litedb::constants::PAGE_SIZE * 2)
+            st.st_size < static_cast<off_t>(litedb::constants::PAGE_SIZE)
         ) {
             ::close(fd);
             throw std::runtime_error("Database file is not valid");
@@ -74,12 +73,7 @@ void release_db_path() {
 }
 
 void set_root_page() {
-    litedb::page::Page page;
-    page.readEmpty(0);
-    page.setType(0);
-    page.setFreeSpace(litedb::constants::PAGE_SIZE - litedb::constants::PAGE_HEADER_SIZE);
-    page.setNextPage(0);
-    page.write();
+    set_empty_page(0, 0);
 }
 
 void set_empty_page(uint32_t page_id, uint8_t page_type) {
