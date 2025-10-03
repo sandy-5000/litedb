@@ -5,6 +5,8 @@
 #include "litedb/page/page.hpp"
 #include "litedb/engine/root_manager.hpp"
 #include "litedb/engine/buffer_manager.hpp"
+#include "litedb/engine/task_queue.hpp"
+#include "litedb/engine/query_processor.hpp"
 #include "litedb/engine/store.hpp"
 #include "litedb/thread_test.hpp"
 #include "litedb/config.hpp"
@@ -37,11 +39,13 @@ int32_t main(int argc, char* argv[]) {
     std::string file_path = std::string(argv[1]);
     litedb::root_manager::RootManager rootManager;
     litedb::buffer_manager::BufferManager bufferManager;
+    litedb::engine::TaskQueue taskQueue;
 
     try {
         litedb::config::init_db_path(argv[1]);
         litedb::engine::root_manager = &rootManager;
         litedb::engine::buffer_manager = &bufferManager;
+        litedb::engine::task_q = &taskQueue;
         litedb::config::print_hardware_config();
     } catch (const std::exception& ex) {
         std::cerr << "Error: " << ex.what() << "\n";
@@ -54,9 +58,11 @@ int32_t main(int argc, char* argv[]) {
         page->lockShared();
         page->read(0);
         page->printHeader();
-        page->unlockShared();
         std::cout << std::endl;
+        page->unlockShared();
     }
+
+    std::thread worker(litedb::engine::db_worker);
 
     signal(SIGINT, signal_handler);
     litedb::server::TCPServer server(8008);
@@ -68,6 +74,7 @@ int32_t main(int argc, char* argv[]) {
     pthread_join(server_thread, nullptr);
 
     // litedb::thread_test::launchThreads(1024); // testing threads
+    worker.join();
 
     litedb::config::release_db_path();
     std::cout << "Server exited gracefully.\n\n";

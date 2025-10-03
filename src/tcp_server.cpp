@@ -5,9 +5,13 @@
 
 #include "litedb/tcp_server.hpp"
 #include "litedb/json.hpp"
+#include "litedb/engine/task_queue.hpp"
 
 namespace litedb::server {
 
+
+std::string error_task_queue = "Error: [TaskQueue] not started";
+std::string error_forbidden_query = "Error: [ForbiddenQuery] not allowed";
 
 TCPServer::TCPServer(int port) : port_(port) {
     server_fd_ = socket(AF_INET, SOCK_STREAM, 0);
@@ -65,6 +69,11 @@ void TCPServer::run() {
             }
         }
     }
+    if (litedb::engine::task_q) {
+        std::string msg = "\\STOP";
+        litedb::engine::Task task{0, msg};
+        litedb::engine::task_q->push(task);
+    }
     std::cout << "Server stopped\n";
 }
 
@@ -95,12 +104,21 @@ void TCPServer::read_from_client(int client_fd) {
         clients_.erase(std::remove(clients_.begin(), clients_.end(), client_fd), clients_.end());
     } else {
         std::string msg(buffer, n);
-        handle_message(msg);
+        handle_message(client_fd, msg);
     }
 }
 
-void TCPServer::handle_message(const std::string& msg) {
-    litedb::json::print_json(msg);
+void TCPServer::handle_message(uint32_t client_fd, const std::string& msg) {
+    if (litedb::engine::task_q) {
+        if (msg.size() == 0 || msg[0] == '\\') {
+            write(client_fd, error_forbidden_query.c_str(), error_forbidden_query.size());
+        } else {
+            litedb::engine::Task task{client_fd, msg};
+            litedb::engine::task_q->push(task);
+        }
+    } else {
+        write(client_fd, error_task_queue.c_str(), error_task_queue.size());
+    }
 }
 
 void TCPServer::stop() {

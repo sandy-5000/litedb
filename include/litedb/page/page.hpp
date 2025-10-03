@@ -15,11 +15,11 @@ namespace litedb::page {
 class Page : public PageHeader {
 private:
     uint32_t id_;
-    uint8_t data_[litedb::constants::PAGE_SIZE];
     mutable std::shared_mutex mtx_;
     bool dirty_ = false;
 
 public:
+    uint8_t data_[litedb::constants::PAGE_SIZE];
     Page();
     ~Page();
 

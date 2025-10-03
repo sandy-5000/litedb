@@ -3,6 +3,9 @@
 #include <vector>
 #include <sys/select.h>
 
+#include "litedb/engine/task_queue.hpp"
+#include "litedb/engine/store.hpp"
+
 namespace litedb::server {
 
 
@@ -10,7 +13,7 @@ class TCPServer {
 private:
     void accept_new_client();
     void read_from_client(int client_fd);
-    void handle_message(const std::string& msg);
+    void handle_message(uint32_t client_fd, const std::string& msg);
 
     int server_fd_;
     int port_;

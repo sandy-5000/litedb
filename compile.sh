@@ -11,7 +11,9 @@ g++ -std=c++20 -Iinclude \
     \
     src/engine/root_manager.cpp \
     src/engine/buffer_manager.cpp \
+    src/engine/task_queue.cpp \
     src/engine/store.cpp \
+    src/engine/query_processor.cpp \
     \
     src/json.cpp \
     src/tcp_server.cpp \
