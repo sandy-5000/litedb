@@ -6,6 +6,8 @@
 #include <bsoncxx/document/view.hpp>
 #include <bsoncxx/types.hpp>
 
+#include "litedb/tables/operations.hpp"
+
 using namespace bsoncxx;
 
 namespace litedb::json {

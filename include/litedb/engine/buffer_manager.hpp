@@ -19,8 +19,8 @@ public:
     MiniBuffer(const std::string& buffer_id, size_t capacity);
     ~MiniBuffer();
 
-    std::shared_ptr<litedb::page::Page> getPage(size_t page_id);
-    void setCapacity(size_t capacity);
+    std::shared_ptr<litedb::page::Page> get_page(size_t page_id);
+    void set_capacity(size_t capacity);
 };
 
 class BufferManager {
@@ -31,10 +31,10 @@ public:
     BufferManager();
     ~BufferManager();
 
-    std::optional<std::shared_ptr<MiniBuffer>> getBuffer(const std::string& buffer_id);
-    std::shared_ptr<MiniBuffer> getBuffer(const std::string& buffer_id, size_t capacity);
-    void setBuffer(const std::string& buffer_id, size_t capacity);
-    bool removeBuffer(const std::string& buffer_id);
+    std::optional<std::shared_ptr<MiniBuffer>> get_buffer(const std::string& buffer_id);
+    std::shared_ptr<MiniBuffer> get_buffer(const std::string& buffer_id, size_t capacity);
+    void set_buffer(const std::string& buffer_id, size_t capacity);
+    bool remove_buffer(const std::string& buffer_id);
 
 };
 

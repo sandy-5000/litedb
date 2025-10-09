@@ -8,6 +8,7 @@
 #include "litedb/engine/task_queue.hpp"
 #include "litedb/engine/query_processor.hpp"
 #include "litedb/engine/store.hpp"
+#include "litedb/tables/compare.hpp"
 #include "litedb/thread_test.hpp"
 #include "litedb/config.hpp"
 #include "litedb/globals.hpp"
@@ -62,6 +63,19 @@ int32_t main(int argc, char* argv[]) {
         page->unlock_shared();
     }
 
+    uint8_t bytes_a[] = {0x0f, 0x00, 0x10, 0x00, 0x00, 0x01, 0x00, 0x02, 0x73, 0x61, 0x6e, 0x64, 0x79, 0x00, 0x00};
+    std::string str_a(reinterpret_cast<const char*>(bytes_a), sizeof(bytes_a));
+
+    uint8_t bytes_b[] = {0x0b, 0x00, 0x10, 0x00, 0x00, 0x01, 0x00, 0x02, 0x7a, 0x00, 0x00};
+    std::string str_b(reinterpret_cast<const char*>(bytes_b), sizeof(bytes_b));
+
+    std::cout << "Compare:" << " ";
+    std::cout << (int32_t)litedb::table::utils::compare::key(
+        reinterpret_cast<const uint8_t*>(str_a.data()), 0, 0,
+        reinterpret_cast<const uint8_t*>(str_b.data()), 0, 0
+    ) << std::endl << std::endl;
+
+
     std::thread worker(litedb::engine::db_worker);
 
     signal(SIGINT, signal_handler);
@@ -70,8 +84,10 @@ int32_t main(int argc, char* argv[]) {
 
     pthread_t server_thread;
     pthread_create(&server_thread, nullptr, server_thread_func, &server);
-    std::cout << "Server running. Press Ctrl+C to stop...\n\n";
+    std::cout << "Test Server running. Press Ctrl+C to stop...\n\n";
     pthread_join(server_thread, nullptr);
+
+
 
     // litedb::thread_test::launchThreads(1024); // testing threads
     worker.join();

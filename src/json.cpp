@@ -10,6 +10,17 @@ void print_json(const std::string& jsonInput) {
         bsoncxx::document::value doc = bsoncxx::from_json(jsonInput);
         auto view = doc.view();
 
+        std::string type, table_name;
+
+        if (auto elem = view["type"]; elem && elem.type() == bsoncxx::type::k_string) {
+            type = std::string(elem.get_string().value);
+            if (auto elem = view["table_name"]; elem && elem.type() == bsoncxx::type::k_string && type == "create") {
+                std::cout << "call create" << std::endl;
+                table_name = std::string(elem.get_string().value);
+                litedb::table::utils::root_table::create_table(table_name);
+            }
+        }
+
         // save in
         // std::ofstream out("data.bson", std::ios::binary);
         // if (!out) {

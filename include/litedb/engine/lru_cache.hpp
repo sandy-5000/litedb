@@ -23,7 +23,7 @@ private:
 
 public:
     LRUCache() {};
-    void setCapacity(size_t capacity);
+    void set_capacity(size_t capacity);
     size_t getCapacity();
 
     void set(K key, T record);
@@ -64,7 +64,7 @@ std::optional<T> LRUCache<K, T>::get(K key) {
 
 template<typename K, typename T>
 requires std::is_scalar_v<K>
-void LRUCache<K, T>::setCapacity(size_t capacity) {
+void LRUCache<K, T>::set_capacity(size_t capacity) {
     capacity_ = std::max((size_t)10, capacity);
     while (list_.size() > capacity_) {
         auto last = list_.back();

@@ -1,0 +1,193 @@
+/*
+// ------------------------------------------------------------------------
+std::vector<key_page_change> key(
+    std::string table_name, uint32_t root_page, std::string &key, bool is_unique
+) {
+    std::vector<key_page_change> changes;
+    std::vector<uint32_t> parents(1);
+    parents[0] = root_page;
+
+    auto root_manager = litedb::engine::root_manager;
+
+    auto buffer = litedb::engine::buffer_manager->get_buffer(table_name, 200);
+
+    while (true) {
+        uint32_t cur_page_id = parents.back();
+
+        std::shared_ptr<litedb::page::Page> page = buffer->get_page(cur_page_id);
+
+        uint8_t type = page->get_type() & 0xC0;
+        bool is_internal = (type == 0xC0);
+
+        if (is_internal) {
+            page->lock_shared();
+        } else {
+            page->lock_unique();
+        }
+
+        page->read(cur_page_id);
+
+        uint16_t* slot_ptr = reinterpret_cast<uint16_t*>(
+            page->data_ + litedb::constants::PAGE_HEADER_SIZE
+        );
+
+        if (is_internal) {
+
+            uint16_t offset = find::key_internal(page, key);
+            uint32_t child_page_id;
+            --offset;
+
+            if (offset < 0) {
+                child_page_id = page->get_leftmost_child();
+            } else {
+                uint16_t record_offset = slot_ptr[offset];
+                uint8_t* key_ptr = reinterpret_cast<uint8_t*>(
+                    page->data_ + record_offset
+                );
+                std::memcpy(&child_page_id, key_ptr + 2, sizeof(uint32_t));
+            }
+
+            parents.push_back(child_page_id);
+
+        } else {
+
+            uint16_t offset = find::key_leaf(page, key);
+
+            if (is_unique && offset > 0) {
+                uint8_t* prev_key_ptr = reinterpret_cast<uint8_t*>(
+                    page->data_ + slot_ptr[offset - 1]
+                );
+                uint8_t cmp = compare::key(
+                    reinterpret_cast<const uint8_t*>(key.c_str()), 0, 10,
+                    prev_key_ptr, 0, 10
+                );
+                if (cmp == 0) {
+                    page->unlock_unique();
+                    throw std::runtime_error("DUPLICATE_KEY");
+                }
+            }
+
+            uint8_t fit_state = page_insert::is_insertable(
+                page,
+                (key[0] | (key[1] << 8)) + sizeof(uint16_t),
+                sizeof(uint16_t)
+            );
+
+            if (fit_state > 0) {
+                if (fit_state == 1) {
+                    compact_page::key(page);
+                }
+
+                uint16_t free_space_offset = page->get_free_space_offset();
+                uint16_t start_offset = free_space_offset - key.size();
+                std::memcpy(page->data_ + start_offset, key.c_str(), key.size());
+
+                uint8_t* old_ptr = reinterpret_cast<uint8_t*>(
+                    page->data_ + slot_ptr[offset]
+                );
+                uint8_t* new_ptr = old_ptr + sizeof(uint16_t);
+                uint16_t shift_size = (page->get_record_count() - offset) * sizeof(uint16_t);
+
+                std::memmove(new_ptr, old_ptr, shift_size);
+                std::memcpy(old_ptr, &start_offset, sizeof(uint16_t));
+
+                page->set_free_space_offset(start_offset);
+                page->set_free_space(page->get_free_space() - key.size() - sizeof(uint16_t));
+                page->set_record_count(page->get_record_count() + 1);
+
+            } else {
+                std::vector<std::string> keys = { key };
+                std::vector<std::string> split_keys = page_insert::split_key_page(page, keys, offset, buffer);
+
+                std::vector<std::shared_ptr<litedb::page::Page>> stack;
+
+                while (true) {
+                    uint32_t p_cur_page_id;
+                    bool is_new_page = false;
+                    if (parents.size()) {
+                        p_cur_page_id = parents.back();
+                        parents.pop_back();
+                    } else {
+                        p_cur_page_id = root_manager->get_free_page();
+                        root_page = p_cur_page_id;
+                        is_new_page = true;
+                    }
+
+                    std::shared_ptr<litedb::page::Page> p_page = buffer->get_page(p_cur_page_id);
+
+                    if (is_new_page) {
+                        p_page->set_dirty();
+                        p_page->set_id(p_cur_page_id);
+                        p_page->set_free_space_offset(litedb::constants::PAGE_SIZE);
+                        p_page->set_record_count(0);
+                        p_page->set_free_space(litedb::constants::PAGE_SIZE - litedb::constants::PAGE_HEADER_SIZE);
+                        p_page->set_type(0xC0);
+                        p_page->set_possible_parent(0);
+                    }
+
+                    stack.push_back(p_page);
+
+                    p_page->lock_unique();
+
+                    uint16_t total_key_size = 0;
+                    for (auto key : split_keys) {
+                        total_key_size += (key[0] | (key[1] << 8)) + sizeof(uint16_t);
+                    }
+                    uint8_t fit_state = page_insert::is_insertable(
+                        p_page,
+                        total_key_size,
+                        sizeof(uint16_t)
+                    );
+
+                    if (fit_state > 0) {
+                        if (fit_state == 1) {
+                            compact_page::key(p_page);
+                        }
+
+                        uint16_t idx = 0;
+                        std::vector<uint16_t> start_offsets(split_keys.size());
+
+                        for (auto &key : split_keys) {
+                            uint16_t free_space_offset = p_page->get_free_space_offset();
+                            uint16_t start_offset = free_space_offset - key.size();
+                            std::memcpy(p_page->data_ + start_offset, key.c_str(), key.size());
+
+                            p_page->set_free_space_offset(start_offset);
+                            p_page->set_free_space(p_page->get_free_space() - key.size());
+
+                            ++idx;
+                        }
+
+                        uint8_t* old_ptr = reinterpret_cast<uint8_t*>(
+                            page->data_ + slot_ptr[offset]
+                        );
+                        uint8_t* new_ptr = old_ptr + start_offsets.size() * sizeof(uint16_t);
+                        uint16_t shift_size = (page->get_record_count() - offset) * sizeof(uint16_t);
+
+                        std::memmove(new_ptr, old_ptr, shift_size);
+                        std::memcpy(old_ptr, start_offsets.data(), start_offsets.size() * sizeof(uint16_t));
+
+                        break;
+                    } else {
+                        uint16_t p_offset = find::key_internal(p_page, split_keys[0]);
+
+                        split_keys = page_insert::split_key_page(p_page, split_keys, p_offset, buffer);
+                    }
+                }
+            }
+
+            break;
+
+        }
+
+        if (is_internal) {
+            page->unlock_shared();
+        } else {
+            page->unlock_unique();
+        }
+    }
+
+    return changes;
+}
+
+*/

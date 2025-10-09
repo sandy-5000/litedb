@@ -6,8 +6,8 @@ namespace litedb::root_manager {
 RootManager::RootManager() {
     max_batch = 1000;
     try {
-        root.forceRead(0);
-        uint32_t page_id = root.getLeftMostChild();
+        root.force_read(0);
+        uint32_t page_id = root.get_leftmost_child();
         free_pages_.push_front(page_id);
     } catch (const std::exception& e) {
         throw std::runtime_error(std::string("[RootManger] initialization failed: ") + e.what());
@@ -60,11 +60,11 @@ void RootManager::free_files_list_write() {
     }
 }
 
-litedb::page::Page* RootManager::getRoot() {
+litedb::page::Page* RootManager::get_root() {
     return &root;
 }
 
-uint32_t RootManager::getFreePage() {
+uint32_t RootManager::get_free_page() {
     std::unique_lock lock(mtx_);
     if (free_pages_.size() == 1) {
         if (free_pages_.front() == 0) {
@@ -75,14 +75,14 @@ uint32_t RootManager::getFreePage() {
     }
     uint32_t id = free_pages_.front();
     free_pages_.pop_front();
-    root.setLeftMostChild(free_pages_.front());
+    root.set_leftmost_child(free_pages_.front());
     return id;
 }
 
-void RootManager::addFreePage(uint32_t page_id) {
+void RootManager::add_free_page(uint32_t page_id) {
     std::unique_lock lock(mtx_);
     free_pages_.push_front(page_id);
-    root.setLeftMostChild(page_id);
+    root.set_leftmost_child(page_id);
     if (free_pages_.size() >= max_batch - 10) {
         free_files_list_write();
     }

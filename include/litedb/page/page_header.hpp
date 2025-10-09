@@ -42,60 +42,60 @@ protected:
 
 public:
     template<typename T>
-    T readValue(std::size_t offset) const;
+    T read_value(std::size_t offset) const;
 
     template<typename T>
-    void writeValue(std::size_t offset, const T value);
+    void write_value(std::size_t offset, const T value);
 
     PageHeader(uint8_t* data);
 
-    std::uint32_t getId() const;
-    void setId(std::uint32_t);
+    std::uint32_t get_id() const;
+    void set_id(std::uint32_t);
 
-    std::uint8_t getType() const;
-    void setType(std::uint8_t);
+    std::uint8_t get_type() const;
+    void set_type(std::uint8_t);
 
-    std::uint8_t getFlag() const;
-    void setFlag(std::uint8_t);
+    std::uint8_t get_flag() const;
+    void set_flag(std::uint8_t);
 
-    std::uint16_t getFreeSpace() const;
-    void setFreeSpace(std::uint16_t);
+    std::uint16_t get_free_space() const;
+    void set_free_space(std::uint16_t);
 
-    std::uint64_t getChecksum() const;
-    void setChecksum(std::uint64_t);
+    std::uint64_t get_checksum() const;
+    void set_checksum(std::uint64_t);
 
-    std::uint16_t getRecordCount() const;
-    void setRecordCount(std::uint16_t);
+    std::uint16_t get_record_count() const;
+    void set_record_count(std::uint16_t);
 
-    std::uint16_t getSlotsDir() const;
-    void setSlotsDir(std::uint16_t);
+    std::uint16_t get_free_space_offset() const;
+    void set_free_space_offset(std::uint16_t);
 
-    std::uint32_t getNextPage() const;
-    void setNextPage(std::uint32_t);
+    std::uint32_t get_next_page() const;
+    void set_next_page(std::uint32_t);
 
-    std::uint64_t getLSN() const;
-    void setLSN(std::uint64_t);
+    std::uint64_t get_lsn() const;
+    void set_lsn(std::uint64_t);
 
-    std::uint64_t getMaxKey() const;
-    void setMaxKey(std::uint64_t);
+    std::uint64_t get_max_key() const;
+    void set_max_key(std::uint64_t);
 
-    std::uint32_t getPossibleParent() const;
-    void setPossibleParent(std::uint32_t);
+    std::uint32_t get_possible_parent() const;
+    void set_possible_parent(std::uint32_t);
 
-    std::uint32_t getLeftMostChild() const;
-    void setLeftMostChild(std::uint32_t);
+    std::uint32_t get_leftmost_child() const;
+    void set_leftmost_child(std::uint32_t);
 
-    void printHeader() const;
+    void print_header() const;
 };
 
 template <typename T>
-inline T PageHeader::readValue(std::size_t offset) const {
+inline T PageHeader::read_value(std::size_t offset) const {
     static_assert(std::is_integral<T>::value, "T must be an integral type");
     return *reinterpret_cast<const T*>(data_ + offset);
 }
 
 template <typename T>
-inline void PageHeader::writeValue(std::size_t offset, const T value) {
+inline void PageHeader::write_value(std::size_t offset, const T value) {
     static_assert(std::is_integral<T>::value, "T must be an integral type");
     *reinterpret_cast<T*>(data_ + offset) = value;
 }

@@ -1,19 +1,19 @@
-#include "litedb/tables/key.hpp"
+#include "litedb/tables/compare.hpp"
 
-namespace litedb::table_key {
+namespace litedb::table::utils {
 
 
-int8_t compare_keys(
-    const uint8_t* page_a, size_t off_a,
-    const uint8_t* page_b, size_t off_b
+int8_t compare::key(
+    const uint8_t* key_a, const uint16_t shift_a, const uint16_t back_a,
+    const uint8_t* key_b, const uint16_t shift_b, const uint16_t back_b
 ) {
-    uint16_t len_a = page_a[off_a] | (page_a[off_a + 1] << 8);
-    uint16_t len_b = page_b[off_b] | (page_b[off_b + 1] << 8);
+    uint16_t len_a = key_a[0] | (key_a[1] << 8);
+    uint16_t len_b = key_b[0] | (key_b[1] << 8);
 
-    const uint8_t* p_a = page_a + off_a + 2;
-    const uint8_t* p_b = page_b + off_b + 2;
-    const uint8_t* end_a = page_a + off_a + len_a;
-    const uint8_t* end_b = page_b + off_b + len_b;
+    const uint8_t* p_a = key_a + 2 + shift_a;
+    const uint8_t* p_b = key_b + 2 + shift_b;
+    const uint8_t* end_a = key_a + len_a - back_a;
+    const uint8_t* end_b = key_b + len_b - back_b;
     uint8_t type;
 
     while (p_a < end_a && p_b < end_b) {
@@ -38,13 +38,15 @@ int8_t compare_keys(
                 break;
             }
             case 0x02: {
-                while (*p_a != 0 || *p_b != 0) {
+                while (p_a < end_a && p_b < end_b && (*p_a != 0 || *p_b != 0)) {
                     if (*p_a != *p_b) {
                         return *p_a < *p_b ? -1 : 1;
                     }
                     ++p_a, ++p_b;
                 }
-                ++p_a, ++p_b;
+                if (p_a < end_a && p_b < end_b) {
+                    ++p_a, ++p_b;
+                }
                 break;
             }
             case 0x08: {
@@ -90,7 +92,7 @@ int8_t compare_keys(
             }
         }
     }
-    if (p_a == end_a && p_b == end_b) {
+    if (p_a >= end_a && p_b >= end_b) {
         return 0;
     }
     return p_a == end_a ? -1 : 1;

@@ -15,22 +15,22 @@ g++ -std=c++20 -Iinclude \
     src/engine/store.cpp \
     src/engine/query_processor.cpp \
     \
-    src/tables/key.cpp \
+    src/tables/compare.cpp \
     src/tables/compact.cpp \
     src/tables/find.cpp \
     src/tables/insert.cpp \
-    src/tables/delete.cpp \
+    src/tables/operations.cpp \
     \
     src/json.cpp \
     src/tcp_server.cpp \
-    src/main.cpp \
+    src/test.cpp \
     \
-    -o litedb.out \
+    -o test.out \
     $(pkg-config --cflags --libs libmongocxx)
 
 
 if [ $? -eq 0 ]; then
-    echo "Compilation successful. Executable is 'litedb.out'."
+    echo "Compilation successful. Executable is 'test.out'."
 else
     echo "Compilation failed."
 fi

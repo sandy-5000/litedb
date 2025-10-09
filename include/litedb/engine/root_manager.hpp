@@ -20,9 +20,9 @@ public:
     RootManager();
     ~RootManager();
 
-    litedb::page::Page* getRoot();
-    uint32_t getFreePage();
-    void addFreePage(uint32_t page_id);
+    litedb::page::Page* get_root();
+    uint32_t get_free_page();
+    void add_free_page(uint32_t page_id);
 };
 
 

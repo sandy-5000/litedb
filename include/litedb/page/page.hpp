@@ -23,20 +23,20 @@ public:
     Page();
     ~Page();
 
-    inline void lockShared()   const { mtx_.lock_shared(); }
-    inline void unlockShared() const { mtx_.unlock_shared(); }
-    inline void lockUnique()   const { mtx_.lock(); }
-    inline void unlockUnique() const { mtx_.unlock(); }
+    inline void lock_shared()   const { mtx_.lock_shared(); }
+    inline void unlock_shared() const { mtx_.unlock_shared(); }
+    inline void lock_unique()   const { mtx_.lock(); }
+    inline void unlock_unique() const { mtx_.unlock(); }
 
     uint32_t id() const;
-    void readEmpty(uint32_t page_id);
+    void read_empty(uint32_t page_id);
     ssize_t read(uint32_t page_id);
-    ssize_t forceRead(uint32_t page_id);
+    ssize_t force_read(uint32_t page_id);
     ssize_t write();
 
-    void setDirty();
-    bool isDirty();
-    bool isEmpty();
+    void set_dirty();
+    bool is_dirty();
+    bool is_empty();
     void clear();
 };
 

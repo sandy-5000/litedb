@@ -78,10 +78,10 @@ void set_root_page() {
 
 void set_empty_page(uint32_t page_id, uint8_t page_type) {
     litedb::page::Page page;
-    page.readEmpty(page_id);
-    page.setType(page_type);
-    page.setFreeSpace(litedb::constants::PAGE_SIZE - litedb::constants::PAGE_HEADER_SIZE);
-    page.setNextPage(0);
+    page.read_empty(page_id);
+    page.set_type(page_type);
+    page.set_free_space(litedb::constants::PAGE_SIZE - litedb::constants::PAGE_HEADER_SIZE);
+    page.set_next_page(0);
     page.write();
 }
 
