@@ -6,6 +6,8 @@
 
 namespace litedb::page {
 
+inline constexpr uint16_t NEXT_PAGE_OFFSET = 20;
+
 struct page_header {
     // 8 bytes
     uint32_t id = constants::INVALID_PAGE_ID;
@@ -29,7 +31,7 @@ struct page_header {
 
     // 8 bytes
     uint32_t p_parent;
-    uint32_t left_most_child;
+    uint32_t leftmost_child;
 };
 
 }

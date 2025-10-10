@@ -8,6 +8,9 @@ g++ -std=c++20 -Iinclude \
     src/page/io.cpp \
     src/page/page.cpp \
     \
+    src/engine/root_manager.cpp \
+    src/engine/store.cpp \
+    \
     src/main.cpp \
     \
     -o litedb.out \

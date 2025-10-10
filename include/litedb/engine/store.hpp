@@ -1,0 +1,9 @@
+#pragma once
+
+#include "litedb/engine/root_manager.hpp"
+
+namespace litedb::engine {
+
+extern root_manager::RootManager* root_manager;
+
+}
