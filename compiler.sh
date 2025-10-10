@@ -1,8 +1,13 @@
 #!/bin/bash
 
 g++ -std=c++20 -Iinclude \
+    \
     src/globals.cpp \
     src/config.cpp \
+    \
+    src/page/io.cpp \
+    src/page/page.cpp \
+    \
     src/main.cpp \
     \
     -o litedb.out \

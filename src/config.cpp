@@ -8,6 +8,7 @@
 #include <thread>
 
 #include "litedb/globals.hpp"
+#include "litedb/page/page.hpp"
 
 namespace litedb::config {
 
@@ -27,7 +28,7 @@ void init_db_path(const std::string& path) {
         litedb::g::DB_FILE_DESCRIPTOR = fd;
         litedb::g::DB_FILE_PATH = path;
         litedb::g::pages_count = 1;
-        // set_root_page();
+        set_root_page();
     } else {
         if (!fs::is_regular_file(path)) {
             throw std::invalid_argument("Database file is not a regular file");
@@ -95,5 +96,17 @@ void print_hardware_config() {
     std::cout << std::endl;
 }
 
+void set_root_page() {
+    set_empty_page(0, 0);
+}
+
+void set_empty_page(uint32_t page_id, uint8_t page_type) {
+    litedb::page::Page page;
+    page.read_empty(page_id);
+    page.header.type = page_type;
+    page.header.free_space = g::PAGE_BODY_SIZE;
+    page.header.next_page = 0;
+    page.write();
+}
 
 }
