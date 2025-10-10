@@ -9,7 +9,8 @@ RootManager::RootManager() {
     max_batch = 1000;
     try {
         root.force_read(0);
-        uint32_t page_id = root.header.leftmost_child;
+        std::memcpy(&page_data, root.data_ + constants::PAGE_HEADER_SIZE, sizeof(root_data));
+        uint32_t page_id = page_data.top_free_page;
         free_pages_.push_front(page_id);
     } catch (const std::exception& e) {
         throw std::runtime_error(std::string("[RootManger] initialization failed: ") + e.what());
@@ -17,8 +18,13 @@ RootManager::RootManager() {
 }
 
 RootManager::~RootManager() {
+    save_state();
+}
+
+void RootManager::save_state() {
     std::unique_lock lock(mtx_);
     try {
+        std::memcpy(root.data_ + constants::PAGE_HEADER_SIZE, &page_data, sizeof(root_data));
         root.write();
     } catch (const std::exception& e) {
         std::cerr << "[RootManger] Failed to write root-page: " << e.what() << "\n";
@@ -28,6 +34,7 @@ RootManager::~RootManager() {
     } catch (const std::exception& e) {
         std::cerr << "[RootManger] Failed to write free-pages-list: " << e.what() << "\n";
     }
+    std::cout << "[RootManger] state_saved" << std::endl;
 }
 
 void RootManager::free_files_list_read() {
@@ -77,14 +84,14 @@ uint32_t RootManager::get_free_page() {
     }
     uint32_t id = free_pages_.front();
     free_pages_.pop_front();
-    root.header.leftmost_child = free_pages_.front();
+    page_data.top_free_page = free_pages_.front();
     return id;
 }
 
 void RootManager::add_free_page(uint32_t page_id) {
     std::unique_lock lock(mtx_);
     free_pages_.push_front(page_id);
-    root.header.leftmost_child = page_id;
+    page_data.top_free_page = page_id;
     if (free_pages_.size() >= max_batch - 10) {
         free_files_list_write();
     }

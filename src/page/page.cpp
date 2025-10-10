@@ -1,7 +1,9 @@
 #include "litedb/page/page.hpp"
 
-#include "litedb/page/io.hpp"
+#include <iostream>
 #include <cstring>
+
+#include "litedb/page/io.hpp"
 
 namespace litedb::page {
 
@@ -69,6 +71,18 @@ void Page::clear() {
     header.id = constants::INVALID_PAGE_ID;
     std::memset(data_, 0, litedb::constants::PAGE_SIZE);
     dirty_ = false;
+}
+
+void Page::print_header() const {
+    std::vector<uint8_t> page_header(constants::PAGE_HEADER_SIZE, 0);
+    std::memcpy(page_header.data(), &header, sizeof(header));
+    std::cout << "------ Page header ---"
+              << " (" << header.id << ")"
+              << std::endl;
+    for (int i = 0; i < constants::PAGE_HEADER_SIZE; ++i) {
+        std::printf("%02X ", page_header[i]);
+        if ((i + 1) % 8 == 0) std::cout << std::endl;
+    }
 }
 
 }

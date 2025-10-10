@@ -33,6 +33,8 @@ public:
     void set_dirty();
     bool is_dirty() const;
     void clear();
+
+    void print_header() const;
 };
 
 }

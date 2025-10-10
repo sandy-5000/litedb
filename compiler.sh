@@ -9,6 +9,7 @@ g++ -std=c++20 -Iinclude \
     src/page/page.cpp \
     \
     src/engine/root_manager.cpp \
+    src/engine/buffer_manager.cpp \
     src/engine/store.cpp \
     \
     src/main.cpp \

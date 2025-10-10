@@ -7,6 +7,11 @@
 
 namespace litedb::engine::root_manager {
 
+struct root_data {
+    uint32_t top_free_page = 0;
+    uint32_t root_table_page = 0;
+};
+
 
 class RootManager {
 private:
@@ -19,9 +24,12 @@ private:
     void free_files_list_read();
     void free_files_list_write();
 
+    root_data page_data;
+
 public:
     RootManager();
     ~RootManager();
+    void save_state();
 
     litedb::page::Page* get_root();
     uint32_t get_free_page();
