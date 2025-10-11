@@ -2,6 +2,7 @@
 
 #include <iostream>
 #include <cstring>
+#include <vector>
 
 #include "litedb/page/io.hpp"
 

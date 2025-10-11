@@ -2,6 +2,7 @@
 
 #include <mutex>
 #include <iostream>
+#include <cstring>
 
 namespace litedb::engine::root_manager {
 
