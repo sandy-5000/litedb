@@ -14,14 +14,16 @@ g++ -std=c++20 -Iinclude \
     \
     src/table/compare.cpp \
     \
-    src/main.cpp \
+    _test.cpp \
     \
     -o litedb.out \
     $(pkg-config --cflags --libs libmongocxx)
 
 
 if [ $? -eq 0 ]; then
-    echo "Compilation successful. Executable is 'litedb.out'."
+    echo "Test Compilation successful. Executable is 'litedb.out'."
 else
-    echo "Compilation failed."
+    echo "Test Compilation failed."
 fi
+
+./litedb.out data.ldb
