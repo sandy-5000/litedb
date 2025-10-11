@@ -7,9 +7,18 @@
                 "/usr/local/include",
                 "/usr/local/include/bsoncxx/v_noabi",
                 "/usr/local/include/mongocxx/v_noabi",
-                "/usr/include",
-
-                // Mac
+                "/usr/include"
+            ],
+            "defines": [],
+            "compilerPath": "/usr/bin/g++",
+            "cStandard": "c17",
+            "cppStandard": "c++20",
+            "intelliSenseMode": "linux-clang-x64"
+        },
+        {
+            "name": "Mac",
+            "includePath": [
+                "${workspaceFolder}/**",
                 "/opt/homebrew/include",
                 "/opt/homebrew/include/bsoncxx/v_noabi",
                 "/opt/homebrew/include/mongocxx/v_noabi"
@@ -18,7 +27,7 @@
             "compilerPath": "/usr/bin/g++",
             "cStandard": "c17",
             "cppStandard": "c++20",
-            "intelliSenseMode": "linux-clang-x64"
+            "intelliSenseMode": "macos-clang-arm64"
         }
     ],
     "version": 4
