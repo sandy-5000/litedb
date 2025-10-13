@@ -4,7 +4,12 @@
 #include <vector>
 #include <string>
 #include <cstring>
+#include <list>
 
+#include "litedb/config.hpp"
+#include "litedb/engine/store.hpp"
+#include "litedb/engine/root_manager.hpp"
+#include "litedb/engine/buffer_manager.hpp"
 #include "litedb/table/compare.hpp"
 #include "litedb/table/data_types.hpp"
 
@@ -71,6 +76,8 @@ void finsh_key(std::vector<uint8_t> &key) {
     std::memcpy(key.data(), &total_size, sizeof(uint16_t));
     // print_key(key);
 }
+
+
 
 void compare_test() {
     using namespace litedb::table;
@@ -377,11 +384,64 @@ void compare_test() {
     }
 }
 
+void test_page_allocations() {
+    auto buffer = litedb::engine::buffer_manager_->getBuffer("root", 0);
+    if (!buffer) {
+        std::cerr << "Error: " << "Buffer not found" << "\n";
+        return;
+    }
 
+    int32_t no_of_pages = 100, to_free = 30, after_free = 10;
+    std::list<uint32_t> pages_;
 
-int32_t main() {
+    for (int i = 0; i < no_of_pages; ++i) {
+        uint32_t new_page_id = litedb::engine::root_manager_->get_free_page();
+        std::shared_ptr<litedb::page::Page> page = buffer->getPage(new_page_id);
+        page->read_empty(new_page_id);
+        page->header.record_count = 1;
+        std::cout << new_page_id << std::endl;
+        pages_.push_back(new_page_id);
+    }
+
+    for (int i = 1; i < to_free; ++i) {
+        litedb::engine::root_manager_->add_free_page(pages_.front());
+        pages_.pop_front();
+    }
+
+    std::cout << "Fetching pages after freeing" << std::endl;
+    for (int i = 0; i < after_free; ++i) {
+        uint32_t new_page_id = litedb::engine::root_manager_->get_free_page();
+        std::shared_ptr<litedb::page::Page> page = buffer->getPage(new_page_id);
+        page->read_empty(new_page_id);
+        page->header.record_count = 1;
+        std::cout << new_page_id << std::endl;
+    }
+}
+
+int32_t main(int argc, char* argv[]) {
+    if (argc < 2) {
+        std::cout << "For storing needed a file path <file_name>.ldb" << std::endl;
+        return 0;
+    }
+
+    std::string file_path = std::string(argv[1]);
+
+    try {
+        litedb::config::init_db_path(argv[1]);
+
+        static litedb::engine::root_manager::RootManager rootManager;
+        static litedb::engine::buffer_manager::BufferManager bufferManager;
+        litedb::engine::root_manager_ = &rootManager;
+        litedb::engine::buffer_manager_ = &bufferManager;
+
+        litedb::config::print_hardware_config();
+    } catch (const std::exception& ex) {
+        std::cerr << "Error: " << ex.what() << "\n";
+        return 1;
+    }
 
     compare_test();
+    test_page_allocations();
 
     return 0;
 }
