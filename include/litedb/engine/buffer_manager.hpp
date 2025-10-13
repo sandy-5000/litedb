@@ -19,17 +19,20 @@ public:
     MiniBuffer(const std::string& buffer_id, size_t capacity);
     ~MiniBuffer();
 
-    std::shared_ptr<litedb::page::Page> getPage(size_t page_id);
-    void setCapacity(size_t capacity);
+    std::shared_ptr<litedb::page::Page> get_page(size_t page_id);
+    void set_capacity(size_t capacity);
 };
 
 class BufferManager {
 private:
     std::unordered_map<std::string, std::shared_ptr<MiniBuffer>> buffers_;
+    MiniBuffer main_buffer;
 
 public:
     BufferManager();
     ~BufferManager();
+
+    MiniBuffer* get_main_buffer();
 
     std::optional<std::shared_ptr<MiniBuffer>> getBuffer(const std::string& buffer_id);
     std::shared_ptr<MiniBuffer> getBuffer(const std::string& buffer_id, size_t capacity);

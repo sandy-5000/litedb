@@ -20,10 +20,10 @@ public:
     Page();
     ~Page();
 
-    inline void lock_shared()   const { mtx_.lock_shared(); }
-    inline void unlock_shared() const { mtx_.unlock_shared(); }
-    inline void lock_unique()   const { mtx_.lock(); }
-    inline void unlock_unique() const { mtx_.unlock(); }
+    inline void lock_shared()   const { /*mtx_.lock_shared();*/ }
+    inline void unlock_shared() const { /*mtx_.unlock_shared();*/ }
+    inline void lock_unique()   const { /*mtx_.lock();*/ }
+    inline void unlock_unique() const { /*mtx_.unlock();*/ }
 
     void read_empty(uint32_t page_id);
     ssize_t read(uint32_t page_id);

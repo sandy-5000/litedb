@@ -21,7 +21,7 @@ MiniBuffer::~MiniBuffer() {
     std::cout << "[MiniBuffer] " << buffer_id_ << " state_saved" << std::endl;
 }
 
-std::shared_ptr<litedb::page::Page> MiniBuffer::getPage(size_t page_id) {
+std::shared_ptr<litedb::page::Page> MiniBuffer::get_page(size_t page_id) {
     auto cached_page = cache_.get(page_id);
     if (cached_page) {
         return *cached_page;
@@ -31,18 +31,21 @@ std::shared_ptr<litedb::page::Page> MiniBuffer::getPage(size_t page_id) {
     return p;
 }
 
-void MiniBuffer::setCapacity(size_t capacity) {
+void MiniBuffer::set_capacity(size_t capacity) {
     capacity_ = capacity;
     cache_.setCapacity(capacity);
 }
 
 
-BufferManager::BufferManager() {
-    setBuffer("root", constants::BUFFER_MANAGER_SIZE);
+BufferManager::BufferManager() : main_buffer("_main_", constants::BUFFER_MANAGER_SIZE) {
+    setBuffer("root", 10);
 }
 
 BufferManager::~BufferManager() = default;
 
+MiniBuffer* BufferManager::get_main_buffer() {
+    return &main_buffer;
+}
 
 std::optional<std::shared_ptr<MiniBuffer>> BufferManager::getBuffer(const std::string& buffer_id) {
     auto it = buffers_.find(buffer_id);
@@ -65,7 +68,7 @@ std::shared_ptr<MiniBuffer> BufferManager::getBuffer(const std::string& buffer_i
 void BufferManager::setBuffer(const std::string& buffer_id, size_t capacity) {
     auto it = buffers_.find(buffer_id);
     if (buffers_.end() != it) {
-        it->second->setCapacity(capacity);
+        it->second->set_capacity(capacity);
         return;
     }
     std::shared_ptr<MiniBuffer> buffer = std::make_shared<MiniBuffer>(buffer_id, capacity);

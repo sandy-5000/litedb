@@ -7,7 +7,7 @@
 
 namespace litedb::table {
 
-uint16_t compare::front_shift(uint8_t* key, uint8_t type) {
+uint16_t compare::front_shift(const uint8_t* key, const uint8_t type) {
     switch (type) {
         case 0x00:
         case 0x05: {
@@ -34,17 +34,15 @@ uint16_t compare::front_shift(uint8_t* key, uint8_t type) {
 }
 
 
-int8_t compare::keys(uint8_t* key_a, uint8_t* key_b, bool unique) {
+int8_t compare::keys(const uint8_t* key_a, const uint8_t* key_b, bool unique) {
 
     uint16_t len_a;
     std::memcpy(&len_a, key_a, sizeof(uint16_t));
-    uint8_t k_type_a;
-    std::memcpy(&k_type_a, key_a + 2, sizeof(uint8_t));
+    uint8_t k_type_a = key_a[2];
 
     uint16_t len_b;
     std::memcpy(&len_b, key_b, sizeof(uint16_t));
-    uint8_t k_type_b;
-    std::memcpy(&k_type_b, key_b + 2, sizeof(uint8_t));
+    uint8_t k_type_b = key_b[2];
 
     const uint8_t* p_a = key_a + 3 + front_shift(key_a, k_type_a & 0x7f);
     const uint8_t* p_b = key_b + 3 + front_shift(key_b, k_type_b & 0x7f);
