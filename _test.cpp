@@ -319,7 +319,7 @@ void compare_test() {
         append_double(key_b, 2.34);
         append_int64(key_b, 9876543210);
         append_string(key_b, "sandy-blaze");
-        append_string(key_a, "9000");
+        append_string(key_b, "9000");
         append_int64(key_b, 10);
 
         finsh_key(key_a);
