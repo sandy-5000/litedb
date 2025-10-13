@@ -1,5 +1,7 @@
 #include "litedb/table/compare.hpp"
 
+#include <iostream>
+#include <cstdio>
 #include <cstdint>
 #include <cstring>
 
@@ -150,6 +152,62 @@ int8_t compare::keys(const uint8_t* key_a, const uint8_t* key_b, bool unique) {
         return 0;
     }
     return p_a == end_a ? -1 : 1;
+}
+
+void print_key(uint8_t* key) {
+    uint16_t key_size;
+    std::memcpy(&key_size, key, sizeof(uint16_t));
+    printf("Key: [%d] [%d] ", key_size, key[2]);
+    uint8_t *ptr = key + 3;
+    uint8_t *ed = key + key_size - 1;
+    while (ptr < ed) {
+        uint8_t type = *ptr;
+        ++ptr;
+        switch (type) {
+            case TYPE_f64: {
+                double a;
+                std::memcpy(&a, ptr, sizeof(double));
+                ptr += sizeof(double);
+                std::cout << "[" << a << "]" << std::endl;
+                break;
+            }
+            case TYPE_str: {
+                printf("[");
+                while (*ptr != '\0') {
+                    printf("%c", *ptr);
+                    ++ptr;
+                }
+                printf("] ");
+                ++ptr;
+                break;
+            }
+            case TYPE_u8: {
+                if (*ptr) {
+                    printf("[true] ");
+                } else {
+                    printf("[false] ");
+                }
+                ++ptr;
+                break;
+            }
+            case TYPE_i32: {
+                int32_t a;
+                std::memcpy(&a, ptr, sizeof(int32_t));
+                ptr += sizeof(int32_t);
+                std::cout << "[" << a << "]" << std::endl;
+                break;
+            }
+            case TYPE_i64: {
+                int64_t a;
+                std::memcpy(&a, ptr, sizeof(int64_t));
+                ptr += sizeof(int64_t);
+                std::cout << "[" << a << "]" << std::endl;
+                break;
+            }
+            default:
+                break;
+        }
+    }
 }
 
 }

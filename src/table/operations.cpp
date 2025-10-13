@@ -2,6 +2,7 @@
 
 #include <iostream>
 #include <string>
+#include <cstring>
 
 #include "litedb/engine/root_manager.hpp"
 #include "litedb/table/data_types.hpp"
