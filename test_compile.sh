@@ -17,6 +17,7 @@ g++ -std=c++20 -Iinclude \
     src/table/find.cpp \
     src/table/insert.cpp \
     src/table/operations.cpp \
+    src/table/utils.cpp \
     \
     _test.cpp \
     \

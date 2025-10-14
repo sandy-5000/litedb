@@ -15,6 +15,7 @@
 #include "litedb/table/compare.hpp"
 #include "litedb/table/find.hpp"
 #include "litedb/table/operations.hpp"
+#include "litedb/table/utils.hpp"
 
 
 void print_key(std::vector<uint8_t> &key) {
@@ -77,7 +78,7 @@ void finsh_key(std::vector<uint8_t> &key) {
     key.push_back(0x00);
     uint16_t total_size = static_cast<uint16_t>(key.size());
     std::memcpy(key.data(), &total_size, sizeof(uint16_t));
-    // print_key(key);
+    litedb::table::utils::print_key(reinterpret_cast<uint8_t *>(key.data()));
 }
 
 
@@ -273,7 +274,7 @@ void compare_test() {
     {
         ++test_no;
         std::vector<uint8_t> key_a(2), key_b(2);
-        append_key_type(key_a, 0x01, 0);
+        append_key_type(key_a, 0x04, 0);
         append_key_type(key_b, 0x02, 0);
 
         append_double(key_a, 2.34);
@@ -450,6 +451,10 @@ int32_t main(int argc, char* argv[]) {
     // compare_test();
     // test_page_allocations();
     create_tables();
+
+    // auto buffer = litedb::engine::buffer_manager_->get_main_buffer();
+    // std::shared_ptr<litedb::page::Page> page = buffer->get_page(1);
+    // litedb::table::utils::print_slot_page(page);
 
     return 0;
 }

@@ -12,6 +12,7 @@
 #include "litedb/table/compare.hpp"
 #include "litedb/table/compact.hpp"
 #include "litedb/table/find.hpp"
+#include "litedb/table/utils.hpp"
 
 namespace litedb::table {
 
@@ -36,7 +37,7 @@ std::vector<std::string> page_insert::split_key_page(
     uint16_t new_key_index
 ) {
 
-    std::cout << "\ncame to split" << std::endl;
+    std::cout << "[SPLIT_PAGE] " << cur_page->header.id << " " << (int)cur_page->header.type << std::endl;
 
     uint16_t record_count = cur_page->header.record_count;
     if (new_key_index > record_count) {
@@ -55,28 +56,18 @@ std::vector<std::string> page_insert::split_key_page(
         }
 
         uint16_t offset = slot_ptr[i];
+        // std::cout << offset << " - ";
         uint16_t key_size;
         std::memcpy(&key_size, cur_page->data_ + offset, sizeof(uint16_t));
-        std::cout << key_size << " - ";
+        // std::cout << key_size << " | ";
 
         keys[idx] = std::move(
             std::string(reinterpret_cast<char*>(cur_page->data_ + offset), key_size)
         );
     }
-    std::cout << "RC: " << record_count << std::endl;
     for (uint16_t i = 0; i < new_keys.size(); ++i) {
         keys[new_key_index + i] = new_keys[i];
     }
-
-    // for (auto i : keys) {
-    //     std::cout << i.size() << " - ";
-    // }
-
-    // for (auto k : keys) {
-    //     print_key(reinterpret_cast<uint8_t *>(k.data()));
-    // }
-
-    std::cout << keys.size() << " Came to Spl\n";
 
     auto root_manager = engine::root_manager_;
     auto buffer = engine::buffer_manager_->get_main_buffer();
@@ -91,20 +82,13 @@ std::vector<std::string> page_insert::split_key_page(
 
     std::vector<std::string> parent_nodes;
 
-    std::cout << new_key_index << " " << keys.size() << " Came to Spl 2\n";
-
     for (uint16_t i = 0; i < keys.size(); ++i) {
         uint32_t free_space = page->header.free_space;
 
         if (
             page->header.record_count > 0 &&
-            ((free_space - keys[i].size() - sizeof(uint16_t)) * 1.0 / total_free_space) < 0.45
+            ((free_space - keys[i].size() - sizeof(uint16_t)) * 100 / total_free_space) < 10
         ) {
-            // printf("[%d %d %f] ",
-            //     page->header.id,
-            //     free_space,
-            //     ((free_space - keys[i].size() - sizeof(uint16_t)) * 1.0 / total_free_space)
-            // );
 
             uint32_t new_page_id = root_manager->get_free_page();
             std::shared_ptr<litedb::page::Page> new_page = buffer->get_page(new_page_id);
@@ -119,7 +103,19 @@ std::vector<std::string> page_insert::split_key_page(
             new_page->header.p_parent = cur_page->header.p_parent;
 
             page->header.next_page = new_page_id;
-            page = new_page;
+
+            {
+                ///
+
+                // std::cout << "[SPLITING]"
+                //           << "\n [ID] " << page->header.id
+                //           << "\n [TYPE] " << (int)page->header.type
+                //           << "\n [RECORD_COUNT] " << page->header.record_count
+                //           << "\n [FREE_SPACE] " << page->header.free_space << std::endl;
+                // utils::print_slot_page(page);
+
+                ///
+            }
 
             uint8_t key_type = keys[i][2];
             if (key_type == 0x02) {
@@ -137,19 +133,27 @@ std::vector<std::string> page_insert::split_key_page(
                 uint16_t back_shift = has_seq ? 9 : 0;
                 uint16_t new_key_size = keys[i].size() + 4 - cur_shift - back_shift;
                 std::string parent_key_node(new_key_size, 0);
+                // std::cout << "[KEY_SIZES] " << keys[i].size() << " " << new_key_size << "\n";
 
-                uint16_t body_len = parent_key_node.size() - 7 - (has_seq ? 10 : 0);
+                uint16_t body_len = parent_key_node.size() - 8;
                 std::memcpy(parent_key_node.data() + 7, keys[i].data() + 3 + cur_shift, body_len);
                 parent_key_node[2] = 0x02;
                 std::memcpy(parent_key_node.data() + 3, &new_page_id, sizeof(uint32_t));
 
                 std::memcpy(parent_key_node.data(), &new_key_size, sizeof(uint16_t));
+                // utils::print_key(reinterpret_cast<uint8_t *>(parent_key_node.data()));
+                parent_nodes.emplace_back(parent_key_node);
             }
 
-            printf("[%d|%d] ", i, page->header.id);
-        }
+            page = new_page;
 
-        std::cout << free_space << " " << keys[i].size() << " " << sizeof(uint16_t) << " " << ((free_space - keys[i].size() - sizeof(uint16_t)) * 100 / total_free_space) << " " << i << std::endl;
+            // std::cout << "[NEW_PAGE]"
+            //           << "\n [ID] " << page->header.id
+            //           << "\n [TYPE] " << (int)page->header.type
+            //           << "\n [RECORD_COUNT] " << page->header.record_count
+            //           << "\n [FREE_SPACE] " << page->header.free_space << std::endl;
+
+        }
 
         uint16_t* slot_ptr = reinterpret_cast<uint16_t*>(
             page->data_ + litedb::constants::PAGE_HEADER_SIZE
@@ -165,6 +169,14 @@ std::vector<std::string> page_insert::split_key_page(
         page->header.record_count++;
         page->header.free_space -= sizeof(uint16_t);
     }
+
+    std::cout << "======================================================================================================================\n";
+
+    for (auto k : parent_nodes) {
+        utils::print_key(reinterpret_cast<uint8_t *>(k.data()));
+    }
+
+    std::cout << "keys==================================================================================================================\n";
 
     return parent_nodes;
 }
@@ -227,8 +239,6 @@ void page_insert::add_keys_to_page(
         sizeof(uint16_t)
     );
 
-    // printf("index: %d\n", index);
-
     if (fit_state > 0) {
         if (fit_state == 1) {
             compact_page::key(page);
@@ -250,10 +260,11 @@ void page_insert::add_keys_to_page(
         uint8_t* old_ptr = reinterpret_cast<uint8_t*>(
             page->data_ + constants::PAGE_HEADER_SIZE + 2 * index
         );
-        uint16_t shift_size = (page->header.record_count - index) * sizeof(uint16_t);
+        uint16_t shift_size = new_keys.size() * sizeof(uint16_t);
+        uint16_t date_size = (page->header.record_count - index) * sizeof(uint16_t);
         uint8_t* new_ptr = old_ptr + shift_size;
 
-        std::memmove(new_ptr, old_ptr, shift_size);
+        std::memmove(new_ptr, old_ptr, date_size);
         std::memcpy(old_ptr, start_offsets.data(), start_offsets.size() * sizeof(uint16_t));
         page->header.record_count += new_keys.size();
         page->header.free_space -= new_keys.size() * sizeof(uint16_t);
