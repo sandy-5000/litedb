@@ -72,10 +72,17 @@ bool root_table::create_table(const std::string &table_name) {
     auto changes = insert::key(table_name, root_table_page, key, false);
 
     if (changes.size()) {
+        if (changes.back().change_type == 2) {
+            root_manager->lock_unique();
+            root_manager->page_data.root_table_page = changes.back().page_id;
+            std::cout << "[NEW_ROOT_PAGE] " << root_manager->page_data.root_table_page << std::endl;
+            root_manager->unlock_unique();
+            changes.pop_back();
+        }
         // std::cout << "[CREATE_TABLE] success" << std::endl;
         return true;
     } else {
-        std::cout << "[CREATE_TABLE] failed" << std::endl;
+        std::cout << "[CREATE_TABLE] " << table_name << " failed" << std::endl;
         return false;
     }
 }

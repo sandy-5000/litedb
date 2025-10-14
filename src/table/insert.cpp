@@ -36,11 +36,11 @@ std::vector<std::string> page_insert::split_key_page(
     std::vector<std::string> &new_keys,
     uint16_t new_key_index
 ) {
-
-    std::cout << "[SPLIT_PAGE] " << cur_page->header.id << " " << (int)cur_page->header.type << std::endl;
+    std::cout << "[SPLIT_PAGE] " << cur_page->header.id << " [TYPE] " << (int)cur_page->header.type << std::endl;
 
     uint16_t record_count = cur_page->header.record_count;
     if (new_key_index > record_count) {
+        std::cerr << "[SPLIT_PAGE] ERROR (index out of bound)" << std::endl;
         return {};
     }
 
@@ -56,10 +56,8 @@ std::vector<std::string> page_insert::split_key_page(
         }
 
         uint16_t offset = slot_ptr[i];
-        // std::cout << offset << " - ";
         uint16_t key_size;
         std::memcpy(&key_size, cur_page->data_ + offset, sizeof(uint16_t));
-        // std::cout << key_size << " | ";
 
         keys[idx] = std::move(
             std::string(reinterpret_cast<char*>(cur_page->data_ + offset), key_size)
@@ -84,10 +82,11 @@ std::vector<std::string> page_insert::split_key_page(
 
     for (uint16_t i = 0; i < keys.size(); ++i) {
         uint32_t free_space = page->header.free_space;
+        int32_t free_space_percent = (free_space - keys[i].size() - sizeof(uint16_t)) * 100 / total_free_space;
 
         if (
             page->header.record_count > 0 &&
-            ((free_space - keys[i].size() - sizeof(uint16_t)) * 100 / total_free_space) < 10
+            free_space_percent < 60
         ) {
 
             uint32_t new_page_id = root_manager->get_free_page();
@@ -103,19 +102,6 @@ std::vector<std::string> page_insert::split_key_page(
             new_page->header.p_parent = cur_page->header.p_parent;
 
             page->header.next_page = new_page_id;
-
-            {
-                ///
-
-                // std::cout << "[SPLITING]"
-                //           << "\n [ID] " << page->header.id
-                //           << "\n [TYPE] " << (int)page->header.type
-                //           << "\n [RECORD_COUNT] " << page->header.record_count
-                //           << "\n [FREE_SPACE] " << page->header.free_space << std::endl;
-                // utils::print_slot_page(page);
-
-                ///
-            }
 
             uint8_t key_type = keys[i][2];
             if (key_type == 0x02) {
@@ -133,7 +119,6 @@ std::vector<std::string> page_insert::split_key_page(
                 uint16_t back_shift = has_seq ? 9 : 0;
                 uint16_t new_key_size = keys[i].size() + 4 - cur_shift - back_shift;
                 std::string parent_key_node(new_key_size, 0);
-                // std::cout << "[KEY_SIZES] " << keys[i].size() << " " << new_key_size << "\n";
 
                 uint16_t body_len = parent_key_node.size() - 8;
                 std::memcpy(parent_key_node.data() + 7, keys[i].data() + 3 + cur_shift, body_len);
@@ -141,18 +126,10 @@ std::vector<std::string> page_insert::split_key_page(
                 std::memcpy(parent_key_node.data() + 3, &new_page_id, sizeof(uint32_t));
 
                 std::memcpy(parent_key_node.data(), &new_key_size, sizeof(uint16_t));
-                // utils::print_key(reinterpret_cast<uint8_t *>(parent_key_node.data()));
                 parent_nodes.emplace_back(parent_key_node);
             }
 
             page = new_page;
-
-            // std::cout << "[NEW_PAGE]"
-            //           << "\n [ID] " << page->header.id
-            //           << "\n [TYPE] " << (int)page->header.type
-            //           << "\n [RECORD_COUNT] " << page->header.record_count
-            //           << "\n [FREE_SPACE] " << page->header.free_space << std::endl;
-
         }
 
         uint16_t* slot_ptr = reinterpret_cast<uint16_t*>(
@@ -169,14 +146,6 @@ std::vector<std::string> page_insert::split_key_page(
         page->header.record_count++;
         page->header.free_space -= sizeof(uint16_t);
     }
-
-    std::cout << "======================================================================================================================\n";
-
-    for (auto k : parent_nodes) {
-        utils::print_key(reinterpret_cast<uint8_t *>(k.data()));
-    }
-
-    std::cout << "keys==================================================================================================================\n";
 
     return parent_nodes;
 }
@@ -341,7 +310,7 @@ uint32_t page_insert::find_key_page(
         uint32_t child_page_id;
         --offset;
 
-        if (offset < 0) {
+        if (offset == 0xFFFF) {
             child_page_id = page->header.leftmost_child;
         } else {
             uint16_t record_offset = slot_ptr[offset];

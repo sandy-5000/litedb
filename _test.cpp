@@ -420,7 +420,7 @@ void test_page_allocations() {
 
 void create_tables() {
     std::string key = "table__";
-    for (int i = 1; i <= 1000; ++i) {
+    for (int i = 1; i <= 1000000; ++i) {
         auto nk = key + std::to_string(i);
         litedb::table::root_table::create_table(nk);
     }
@@ -452,9 +452,12 @@ int32_t main(int argc, char* argv[]) {
     // test_page_allocations();
     create_tables();
 
-    // auto buffer = litedb::engine::buffer_manager_->get_main_buffer();
-    // std::shared_ptr<litedb::page::Page> page = buffer->get_page(1);
-    // litedb::table::utils::print_slot_page(page);
+    // for (int i = 1; i < litedb::g::pages_count; ++i) {
+    //     std::cout << "page: " << i << std::endl;
+    //     auto buffer = litedb::engine::buffer_manager_->get_main_buffer();
+    //     std::shared_ptr<litedb::page::Page> page = buffer->get_page(i);
+    //     litedb::table::utils::print_slot_page(page);
+    // }
 
     return 0;
 }
