@@ -19,7 +19,7 @@ g++ -std=c++20 -Iinclude \
     src/table/operations.cpp \
     src/table/utils.cpp \
     \
-    _test.cpp \
+    u_test.cpp \
     \
     -o litedb.out \
     $(pkg-config --cflags --libs libmongocxx)
