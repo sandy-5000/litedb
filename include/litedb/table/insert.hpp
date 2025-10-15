@@ -33,7 +33,8 @@ struct page_insert final {
         uint32_t &root_page_id,
         std::vector<std::string> &new_keys,
         std::vector<key_page_change> &changes,
-        std::vector<uint32_t> &parents
+        std::vector<uint32_t> &parents,
+        uint32_t leftmost_child
     );
     static uint32_t find_key_page(
         uint32_t page_id,

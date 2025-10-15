@@ -420,7 +420,7 @@ void test_page_allocations() {
 
 void create_tables() {
     std::string key = "table__";
-    for (int i = 1; i <= 1000000; ++i) {
+    for (int i = 1; i <= 10000000; ++i) {
         auto nk = key + std::to_string(i);
         litedb::table::root_table::create_table(nk);
     }

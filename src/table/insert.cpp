@@ -36,7 +36,7 @@ std::vector<std::string> page_insert::split_key_page(
     std::vector<std::string> &new_keys,
     uint16_t new_key_index
 ) {
-    std::cout << "[SPLIT_PAGE] " << cur_page->header.id << " [TYPE] " << (int)cur_page->header.type << std::endl;
+    // std::cout << "[SPLIT_PAGE] " << cur_page->header.id << " [TYPE] " << (int)cur_page->header.type << std::endl;
 
     uint16_t record_count = cur_page->header.record_count;
     if (new_key_index > record_count) {
@@ -154,7 +154,8 @@ void page_insert::add_keys_to_page(
     uint32_t &root_page_id,
     std::vector<std::string> &new_keys,
     std::vector<key_page_change> &changes,
-    std::vector<uint32_t> &parents
+    std::vector<uint32_t> &parents,
+    uint32_t leftmost_child
 ) {
     uint32_t page_id;
     bool is_new_page = false;
@@ -186,6 +187,7 @@ void page_insert::add_keys_to_page(
         page->header.free_space = g::PAGE_BODY_SIZE;
         page->header.type = 0xC0;
         page->header.p_parent = 0;
+        page->header.leftmost_child = leftmost_child;
     } else {
         page->read(page_id);
     }
@@ -270,7 +272,8 @@ void page_insert::add_keys_to_page(
             root_page_id,
             split_keys,
             changes,
-            parents
+            parents,
+            parents.size() ? 0 : page_id
         );
 
     }
@@ -355,7 +358,8 @@ uint32_t page_insert::find_key_page(
             root_page_id,
             split_keys,
             changes,
-            parents
+            parents,
+            0
         );
 
         return root_page_id;

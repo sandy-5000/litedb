@@ -79,7 +79,9 @@ bool root_table::create_table(const std::string &table_name) {
             root_manager->unlock_unique();
             changes.pop_back();
         }
-        // std::cout << "[CREATE_TABLE] success" << std::endl;
+        if (seq_number % 100000 == 0) {
+            std::cout << "[CREATE_TABLE] " << table_name << " success" << std::endl;
+        }
         return true;
     } else {
         std::cout << "[CREATE_TABLE] " << table_name << " failed" << std::endl;
