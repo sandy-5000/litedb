@@ -420,10 +420,23 @@ void test_page_allocations() {
 
 void create_tables() {
     std::string key = "table__";
-    for (int i = 1; i <= 10000000; ++i) {
+    uint64_t success_cnt = 0, failed_cnt = 0;
+
+    for (int i = 1; i <= 100000000; ++i) {
         auto nk = key + std::to_string(i);
-        litedb::table::root_table::create_table(nk);
+        bool flag = litedb::table::root_table::create_table(nk);
+        flag ? ++success_cnt : ++failed_cnt;
+        if (flag && i % 1000000 == 0) {
+            std::cout << "[CREATE_TABLE] " << nk << " success" << std::endl;
+        }
     }
+
+    auto root_manager = litedb::engine::root_manager_;
+    uint32_t root_table_page = root_manager->page_data.root_table_page;
+
+    std::cout << "\n[COMPLETED_INSERTS]\n";
+    std::cout << "[SUCCESS]: " << success_cnt << " [FAILED]: " << failed_cnt << "\n\n";
+    // litedb::table::utils::check_table(root_table_page);
 }
 
 int32_t main(int argc, char* argv[]) {
@@ -450,14 +463,14 @@ int32_t main(int argc, char* argv[]) {
 
     // compare_test();
     // test_page_allocations();
-    create_tables();
+    // create_tables();
 
-    // for (int i = 1; i < litedb::g::pages_count; ++i) {
-    //     std::cout << "page: " << i << std::endl;
-    //     auto buffer = litedb::engine::buffer_manager_->get_main_buffer();
-    //     std::shared_ptr<litedb::page::Page> page = buffer->get_page(i);
-    //     litedb::table::utils::print_slot_page(page);
-    // }
+    for (int i = 4; i <= 4; ++i) {
+        std::cout << "page: " << i << std::endl;
+        auto buffer = litedb::engine::buffer_manager_->get_main_buffer();
+        std::shared_ptr<litedb::page::Page> page = buffer->get_page(i);
+        litedb::table::utils::print_slot_page(page);
+    }
 
     return 0;
 }

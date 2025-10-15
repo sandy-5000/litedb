@@ -24,7 +24,6 @@ bool root_table::create_table(const std::string &table_name) {
 
     root_manager->lock_unique();
     uint32_t root_table_page = root_manager->page_data.root_table_page;
-    // std::cout << "Root table page: " << root_table_page << std::endl;
     uint64_t seq_number = root_manager->page_data.seq_number;
     root_manager->page_data.seq_number++;
     root_manager->unlock_unique();
@@ -67,8 +66,6 @@ bool root_table::create_table(const std::string &table_name) {
     key[idx++] = TYPE_i64;
     std::memcpy(key.data() + idx, &seq_number, sizeof(uint64_t));
 
-    // std::cout << "[CREATE_TABLE] table_name " << table_name << " " << seq_number << std::endl;
-
     auto changes = insert::key(table_name, root_table_page, key, false);
 
     if (changes.size()) {
@@ -78,9 +75,6 @@ bool root_table::create_table(const std::string &table_name) {
             std::cout << "[NEW_ROOT_PAGE] " << root_manager->page_data.root_table_page << std::endl;
             root_manager->unlock_unique();
             changes.pop_back();
-        }
-        if (seq_number % 100000 == 0) {
-            std::cout << "[CREATE_TABLE] " << table_name << " success" << std::endl;
         }
         return true;
     } else {
