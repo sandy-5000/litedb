@@ -1,7 +1,6 @@
-#include "litedb/table/compact.hpp"
-
 #include <vector>
 
+#include "litedb/table/compact.hpp"
 #include "litedb/constants.hpp"
 #include "litedb/table/slot.hpp"
 #include "litedb/page/page.hpp"

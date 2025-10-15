@@ -9,6 +9,7 @@ namespace litedb::table {
 
 struct root_table final {
     static bool create_table(const std::string &table_name);
+    static std::string find_table(const std::string &table_name);
 };
 
 }

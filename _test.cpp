@@ -1,5 +1,4 @@
 #include <cstdint>
-
 #include <iostream>
 #include <vector>
 #include <string>
@@ -84,6 +83,7 @@ void finsh_key(std::vector<uint8_t> &key) {
 
 void compare_test() {
     using namespace litedb::table;
+    std::cout << "\n=========== [STARTED_COMPARE] ===========\n";
 
     int test_no = 0;
 
@@ -385,6 +385,7 @@ void compare_test() {
         int8_t res = compare::keys(key_a.data(), key_b.data(), false);
         std::cout << "Test " << test_no << " (compound mixed differ): " << static_cast<int>(res) << " (expected 1)\n";
     }
+    std::cout << "========== [COMPLETED_COMPARE] ==========\n";
 }
 
 void test_page_allocations() {
@@ -418,6 +419,8 @@ void test_page_allocations() {
 }
 
 void create_tables() {
+    std::cout << "\n=========== [STARTED_INSERTS] ===========\n";
+
     std::string key = "table__";
     uint64_t success_cnt = 0, failed_cnt = 0;
 
@@ -433,9 +436,44 @@ void create_tables() {
     auto root_manager = litedb::engine::root_manager_;
     uint32_t root_table_page = root_manager->page_data.root_table_page;
 
-    std::cout << "\n[COMPLETED_INSERTS]\n";
-    std::cout << "[SUCCESS]: " << success_cnt << " [FAILED]: " << failed_cnt << "\n\n";
+    std::cout << "\n[SUCCESS]: " << success_cnt << " [FAILED]: " << failed_cnt << "\n";
+    std::cout << "========== [COMPLETED_INSERTS] ==========\n";
     // litedb::table::utils::check_table(root_table_page);
+}
+
+void find_tables() {
+    std::cout << "\n=========== [STARTED_FINDS] ===========\n";
+
+    std::string key = "table__";
+    uint64_t success_cnt = 0, failed_cnt = 0;
+
+    for (int i = 1; i <= 10000000; ++i) {
+        auto nk = key + std::to_string(i);
+        std::string data = litedb::table::root_table::find_table(nk);
+        if (data.size()) {
+            uint64_t seq_number;
+            std::memcpy(&seq_number, data.data() + 6 + nk.size(), sizeof(uint64_t));
+            std::string table_name(data.data() + 4, data.data() + 4 + nk.size());
+            if (seq_number + 1 == i && nk == table_name) {
+                ++success_cnt;
+            } else {
+                ++failed_cnt;
+                std::cout << "[FIND_TABLE] " << nk << " failed" << std::endl;
+            }
+        } else {
+            ++failed_cnt;
+            std::cout << "[FIND_TABLE] " << nk << " failed" << std::endl;
+        }
+        if (data.size() && i % 1000000 == 0) {
+            std::cout << "[FIND_TABLE] " << nk << " success" << std::endl;
+        }
+    }
+
+    auto root_manager = litedb::engine::root_manager_;
+    uint32_t root_table_page = root_manager->page_data.root_table_page;
+
+    std::cout << "\n[SUCCESS]: " << success_cnt << " [FAILED]: " << failed_cnt << "\n";
+    std::cout << "========== [COMPLETED_FINDS] ==========\n";
 }
 
 int32_t main(int argc, char* argv[]) {
@@ -460,16 +498,19 @@ int32_t main(int argc, char* argv[]) {
         return 1;
     }
 
-    // compare_test();
+    compare_test();
     // test_page_allocations();
     create_tables();
+    find_tables();
 
-    // for (int i = 4; i <= 4; ++i) {
-    //     std::cout << "page: " << i << std::endl;
-    //     auto buffer = litedb::engine::buffer_manager_->get_main_buffer();
-    //     std::shared_ptr<litedb::page::Page> page = buffer->get_page(i);
-    //     litedb::table::utils::print_slot_page(page);
-    // }
+    // std::vector<uint32_t> pages = {1, 34022, 4944};
+    std::vector<uint32_t> pages = {};
+    for (auto i : pages) {
+        std::cout << "page: " << i << std::endl;
+        auto buffer = litedb::engine::buffer_manager_->get_main_buffer();
+        std::shared_ptr<litedb::page::Page> page = buffer->get_page(i);
+        litedb::table::utils::print_slot_page(page);
+    }
 
     return 0;
 }

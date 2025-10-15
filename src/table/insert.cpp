@@ -1,11 +1,10 @@
-#include "litedb/table/insert.hpp"
-
 #include <iostream>
 #include <cstdint>
 #include <memory>
 #include <vector>
 #include <string>
 
+#include "litedb/table/insert.hpp"
 #include "litedb/engine/buffer_manager.hpp"
 #include "litedb/engine/store.hpp"
 #include "litedb/table/slot.hpp"
@@ -311,7 +310,7 @@ void add_keys_to_page(
     page->unlock_unique();
 }
 
-uint32_t find_key_page(
+uint32_t find_and_insert_key_page(
     uint32_t page_id,
     std::string &key,
     bool is_unique,
@@ -330,8 +329,6 @@ uint32_t find_key_page(
         page->unlock_shared();
         page->lock_unique();
     }
-
-    page->read(page_id);
 
     uint16_t* slot_ptr = reinterpret_cast<uint16_t*>(
         page->data_ + litedb::constants::PAGE_HEADER_SIZE
@@ -359,7 +356,7 @@ uint32_t find_key_page(
         parents.push_back(page_id);
         page->unlock_shared();
 
-        return find_key_page(child_page_id, key, is_unique, changes, parents);
+        return find_and_insert_key_page(child_page_id, key, is_unique, changes, parents);
 
     } else {
 
@@ -403,7 +400,7 @@ std::vector<key_page_change> insert::key (
     std::vector<key_page_change> changes;
     std::vector<uint32_t> parents;
 
-    auto new_root_page = find_key_page(
+    auto new_root_page = find_and_insert_key_page(
         root_page,
         key,
         is_unique,

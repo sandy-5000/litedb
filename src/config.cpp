@@ -1,5 +1,3 @@
-#include "litedb/config.hpp"
-
 #include <filesystem>
 #include <fcntl.h>
 #include <sys/stat.h>
@@ -7,6 +5,7 @@
 #include <iostream>
 #include <thread>
 
+#include "litedb/config.hpp"
 #include "litedb/globals.hpp"
 #include "litedb/page/page.hpp"
 

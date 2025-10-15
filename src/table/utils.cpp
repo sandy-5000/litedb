@@ -1,11 +1,10 @@
-#include "litedb/table/utils.hpp"
-
 #include <bitset>
 #include <cstdint>
 #include <cstring>
 #include <cstdio>
 #include <iostream>
 
+#include "litedb/table/utils.hpp"
 #include "litedb/table/data_types.hpp"
 #include "litedb/table/compare.hpp"
 #include "litedb/page/page.hpp"

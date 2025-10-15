@@ -1,6 +1,6 @@
-#include "litedb/globals.hpp"
-
 #include <string>
+
+#include "litedb/globals.hpp"
 
 namespace litedb::g {
 

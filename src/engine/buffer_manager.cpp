@@ -1,7 +1,7 @@
-#include "litedb/engine/buffer_manager.hpp"
-
 #include <iostream>
 #include <memory>
+
+#include "litedb/engine/buffer_manager.hpp"
 
 namespace litedb::engine::buffer_manager {
 

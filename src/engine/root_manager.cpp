@@ -1,8 +1,8 @@
-#include "litedb/engine/root_manager.hpp"
-
 #include <mutex>
 #include <iostream>
 #include <cstring>
+
+#include "litedb/engine/root_manager.hpp"
 
 namespace litedb::engine::root_manager {
 

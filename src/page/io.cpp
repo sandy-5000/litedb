@@ -1,6 +1,6 @@
-#include "litedb/page/io.hpp"
-
 #include <stdexcept>
+
+#include "litedb/page/io.hpp"
 
 namespace litedb::page::io {
 

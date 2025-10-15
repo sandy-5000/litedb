@@ -1,11 +1,12 @@
-#include "litedb/table/operations.hpp"
-
 #include <iostream>
 #include <string>
 #include <cstring>
 
+#include "litedb/table/operations.hpp"
 #include "litedb/engine/root_manager.hpp"
 #include "litedb/table/data_types.hpp"
+#include "litedb/table/insert.hpp"
+#include "litedb/table/find.hpp"
 
 namespace litedb::table {
 
@@ -81,6 +82,43 @@ bool root_table::create_table(const std::string &table_name) {
         std::cout << "[CREATE_TABLE] " << table_name << " failed" << std::endl;
         return false;
     }
+}
+
+std::string root_table::find_table(const std::string &table_name) {
+
+    uint16_t name_size = 0;
+    if (table_name.size() > 256) {
+        std::cout << "[FIND_TABLE] table_name exceeds 256 chars." << std::endl;
+        return "";
+    } else {
+        name_size = table_name.size();
+    }
+
+    auto root_manager = engine::root_manager_;
+    auto root_page = root_manager->get_root();
+
+    root_manager->lock_unique();
+    uint32_t root_table_page = root_manager->page_data.root_table_page;
+    root_manager->page_data.seq_number++;
+    root_manager->unlock_unique();
+
+    if (root_table_page == 0) {
+        return "";
+    }
+
+    uint16_t key_size =
+        (2 + 1) + // key_size + type
+        (1 + name_size + 1) + // table_name
+        (1); // [0x00];
+    std::string key(key_size, 0);
+
+    uint16_t idx = 0;
+    std::memcpy(key.data(), &key_size, sizeof(uint16_t)); idx += 2;
+    key[idx++] = 0x84;
+    key[idx++] = TYPE_str;
+    std::memcpy(key.data() + idx, table_name.data(), name_size);
+
+    return find::in_slot(root_table_page, key, true);
 }
 
 }

@@ -1,10 +1,9 @@
-#include "litedb/table/compare.hpp"
-
 #include <iostream>
 #include <cstdio>
 #include <cstdint>
 #include <cstring>
 
+#include "litedb/table/compare.hpp"
 #include "litedb/table/data_types.hpp"
 
 namespace litedb::table {
