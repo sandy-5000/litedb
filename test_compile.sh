@@ -14,7 +14,6 @@ g++ -std=c++20 -Iinclude \
     \
     src/table/compact.cpp \
     src/table/compare.cpp \
-    src/table/find.cpp \
     src/table/insert.cpp \
     src/table/operations.cpp \
     src/table/utils.cpp \

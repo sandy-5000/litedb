@@ -13,7 +13,6 @@
 #include "litedb/engine/buffer_manager.hpp"
 #include "litedb/table/data_types.hpp"
 #include "litedb/table/compare.hpp"
-#include "litedb/table/find.hpp"
 #include "litedb/table/operations.hpp"
 #include "litedb/table/utils.hpp"
 
@@ -422,7 +421,7 @@ void create_tables() {
     std::string key = "table__";
     uint64_t success_cnt = 0, failed_cnt = 0;
 
-    for (int i = 1; i <= 100000000; ++i) {
+    for (int i = 1; i <= 10000000; ++i) {
         auto nk = key + std::to_string(i);
         bool flag = litedb::table::root_table::create_table(nk);
         flag ? ++success_cnt : ++failed_cnt;
@@ -463,14 +462,14 @@ int32_t main(int argc, char* argv[]) {
 
     // compare_test();
     // test_page_allocations();
-    // create_tables();
+    create_tables();
 
-    for (int i = 4; i <= 4; ++i) {
-        std::cout << "page: " << i << std::endl;
-        auto buffer = litedb::engine::buffer_manager_->get_main_buffer();
-        std::shared_ptr<litedb::page::Page> page = buffer->get_page(i);
-        litedb::table::utils::print_slot_page(page);
-    }
+    // for (int i = 4; i <= 4; ++i) {
+    //     std::cout << "page: " << i << std::endl;
+    //     auto buffer = litedb::engine::buffer_manager_->get_main_buffer();
+    //     std::shared_ptr<litedb::page::Page> page = buffer->get_page(i);
+    //     litedb::table::utils::print_slot_page(page);
+    // }
 
     return 0;
 }

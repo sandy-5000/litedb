@@ -11,12 +11,11 @@
 #include "litedb/table/slot.hpp"
 #include "litedb/table/compare.hpp"
 #include "litedb/table/compact.hpp"
-#include "litedb/table/find.hpp"
 #include "litedb/table/utils.hpp"
 
 namespace litedb::table {
 
-uint8_t page_insert::is_insertable(
+uint8_t is_insertable(
     std::shared_ptr<litedb::page::Page> page, uint16_t key_and_slot_size, uint16_t slot_size
 ) {
     uint32_t free_space_offset = page->header.free_space_offset;
@@ -31,7 +30,38 @@ uint8_t page_insert::is_insertable(
     return 0;
 }
 
-std::vector<std::string> page_insert::split_key_page(
+uint16_t find_in_slot(std::shared_ptr<litedb::page::Page> page, std::string &key) {
+    if (!page) {
+        throw std::invalid_argument("[find_in_slot] PAGE: nullptr");
+    }
+
+    uint16_t* slot_ptr = reinterpret_cast<uint16_t*>(
+        page->data_ + litedb::constants::PAGE_HEADER_SIZE
+    );
+
+    uint16_t record_count = page->header.record_count;
+    uint16_t low = 0, high = record_count;
+
+    while (low < high) {
+        uint16_t mid = low + (high - low) / 2;
+
+        uint16_t record_offset = slot_ptr[mid];
+        int8_t cmp = compare::keys(
+            reinterpret_cast<const uint8_t*>(key.c_str()),
+            page->data_ + record_offset, false
+        );
+
+        if (cmp == -1) {
+            high = mid;
+        } else {
+            low = mid + 1;
+        }
+    }
+
+    return low;
+}
+
+std::vector<std::string> split_key_page(
     std::shared_ptr<litedb::page::Page> cur_page,
     std::vector<std::string> &new_keys,
     uint16_t new_key_index
@@ -150,7 +180,7 @@ std::vector<std::string> page_insert::split_key_page(
     return parent_nodes;
 }
 
-void page_insert::add_keys_to_page(
+void add_keys_to_page(
     uint32_t &root_page_id,
     std::vector<std::string> &new_keys,
     std::vector<key_page_change> &changes,
@@ -192,7 +222,7 @@ void page_insert::add_keys_to_page(
         page->read(page_id);
     }
 
-    uint16_t index = find::in_slot(page, new_keys[0]);
+    uint16_t index = find_in_slot(page, new_keys[0]);
 
     uint16_t* slot_ptr = reinterpret_cast<uint16_t*>(
         page->data_ + constants::PAGE_HEADER_SIZE
@@ -204,7 +234,7 @@ void page_insert::add_keys_to_page(
         std::memcpy(&key_size, key.data(), sizeof(uint16_t));
         total_key_size += key_size + sizeof(uint16_t);
     }
-    uint8_t fit_state = page_insert::is_insertable(
+    uint8_t fit_state = is_insertable(
         page,
         total_key_size,
         sizeof(uint16_t)
@@ -262,7 +292,7 @@ void page_insert::add_keys_to_page(
         };
         changes.push_back(change);
 
-        std::vector<std::string> split_keys = page_insert::split_key_page(
+        std::vector<std::string> split_keys = split_key_page(
             page,
             new_keys,
             index
@@ -281,7 +311,7 @@ void page_insert::add_keys_to_page(
     page->unlock_unique();
 }
 
-uint32_t page_insert::find_key_page(
+uint32_t find_key_page(
     uint32_t page_id,
     std::string &key,
     bool is_unique,
@@ -309,7 +339,7 @@ uint32_t page_insert::find_key_page(
 
     if (is_internal) {
 
-        uint16_t offset = find::in_slot(page, key);
+        uint16_t offset = find_in_slot(page, key);
         uint32_t child_page_id;
         --offset;
 
@@ -333,7 +363,7 @@ uint32_t page_insert::find_key_page(
 
     } else {
 
-        uint16_t index = find::in_slot(page, key);
+        uint16_t index = find_in_slot(page, key);
 
         if (is_unique && index > 0) {
             uint8_t* prev_key_ptr = reinterpret_cast<uint8_t*>(
@@ -373,7 +403,7 @@ std::vector<key_page_change> insert::key (
     std::vector<key_page_change> changes;
     std::vector<uint32_t> parents;
 
-    auto new_root_page = page_insert::find_key_page(
+    auto new_root_page = find_key_page(
         root_page,
         key,
         is_unique,
