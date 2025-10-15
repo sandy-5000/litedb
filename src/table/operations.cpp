@@ -73,9 +73,9 @@ bool root_table::create_table(const std::string &table_name) {
         if (changes.back().change_type == 2) {
             root_manager->lock_unique();
             root_manager->page_data.root_table_page = changes.back().page_id;
-            std::cout << "[NEW_ROOT_PAGE] " << root_manager->page_data.root_table_page << std::endl;
+            // std::cout << "[NEW_ROOT_PAGE] " << root_manager->page_data.root_table_page << std::endl;
             root_manager->unlock_unique();
-            changes.pop_back();
+            // changes.pop_back();
         }
         return true;
     } else {
