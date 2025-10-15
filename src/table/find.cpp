@@ -1,6 +1,7 @@
 #include <cstdint>
 #include <memory>
 #include <string>
+#include <cstring>
 
 #include "litedb/table/find.hpp"
 #include "litedb/page/page.hpp"
