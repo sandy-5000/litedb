@@ -103,7 +103,7 @@ std::vector<std::string> split_key_page(
     uint8_t page_type = cur_page->header.type;
 
     std::shared_ptr<litedb::page::Page> page = cur_page;
-    page->header.free_space_offset = constants::PAGE_SIZE;
+    page->header.free_space_offset = constants::DB_PAGE_SIZE;
     page->header.record_count = 0;
     page->header.free_space = total_free_space;
 
@@ -124,7 +124,7 @@ std::vector<std::string> split_key_page(
 
             new_page->set_dirty();
             new_page->header.id = new_page_id;
-            new_page->header.free_space_offset = constants::PAGE_SIZE;
+            new_page->header.free_space_offset = constants::DB_PAGE_SIZE;
             new_page->header.record_count = 0;
             new_page->header.free_space = total_free_space;
             new_page->header.type = page_type;
@@ -184,7 +184,8 @@ void add_keys_to_page(
     std::vector<std::string> &new_keys,
     std::vector<key_page_change> &changes,
     std::vector<uint32_t> &parents,
-    uint32_t leftmost_child
+    uint32_t leftmost_child,
+    bool lock_it
 ) {
     uint32_t page_id;
     bool is_new_page = false;
@@ -205,13 +206,15 @@ void add_keys_to_page(
 
     auto buffer = engine::buffer_manager_->get_main_buffer();
     std::shared_ptr<litedb::page::Page> page = buffer->get_page(page_id);
-    page->lock_unique();
+    if (lock_it) {
+        page->lock_unique();
+    }
     page->set_dirty();
 
     if (is_new_page) {
         page->read_empty(page_id);
         page->header.id = page_id;
-        page->header.free_space_offset = constants::PAGE_SIZE;
+        page->header.free_space_offset = constants::DB_PAGE_SIZE;
         page->header.record_count = 0;
         page->header.free_space = g::PAGE_BODY_SIZE;
         page->header.type = 0xC0;
@@ -280,8 +283,8 @@ void add_keys_to_page(
         uint8_t* copied_page_data = nullptr;
 
         if (!is_new_page) {
-            copied_page_data = new uint8_t[litedb::constants::PAGE_SIZE];
-            std::memcpy(copied_page_data, page->data_, litedb::constants::PAGE_SIZE);
+            copied_page_data = new uint8_t[litedb::constants::DB_PAGE_SIZE];
+            std::memcpy(copied_page_data, page->data_, litedb::constants::DB_PAGE_SIZE);
         }
 
         key_page_change change{
@@ -302,12 +305,15 @@ void add_keys_to_page(
             split_keys,
             changes,
             parents,
-            parents.size() ? 0 : page_id
+            parents.size() ? 0 : page_id,
+            true
         );
 
     }
 
-    page->unlock_unique();
+    if (lock_it) {
+        page->unlock_unique();
+    }
 }
 
 uint32_t find_and_insert_key_page(
@@ -386,8 +392,10 @@ uint32_t find_and_insert_key_page(
             split_keys,
             changes,
             parents,
-            0
+            0,
+            false
         );
+        page->unlock_unique();
 
         return root_page_id;
     }

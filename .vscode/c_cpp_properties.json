@@ -4,10 +4,10 @@
             "name": "Linux",
             "includePath": [
                 "${workspaceFolder}/**",
+                "/usr/include",
                 "/usr/local/include",
                 "/usr/local/include/bsoncxx/v_noabi",
-                "/usr/local/include/mongocxx/v_noabi",
-                "/usr/include"
+                "/usr/local/include/mongocxx/v_noabi"
             ],
             "defines": [],
             "compilerPath": "/usr/bin/g++",
@@ -21,7 +21,8 @@
                 "${workspaceFolder}/**",
                 "/opt/homebrew/include",
                 "/opt/homebrew/include/bsoncxx/v_noabi",
-                "/opt/homebrew/include/mongocxx/v_noabi"
+                "/opt/homebrew/include/mongocxx/v_noabi",
+                "/opt/homebrew/include/boost"
             ],
             "defines": [],
             "compilerPath": "/usr/bin/g++",

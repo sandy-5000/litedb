@@ -28,7 +28,7 @@ void Page::read_empty(uint32_t page_id) {
 
 ssize_t Page::read(uint32_t page_id) {
     if (page_id != constants::INVALID_PAGE_ID && page_id == header.id) {
-        return litedb::constants::PAGE_SIZE;
+        return litedb::constants::DB_PAGE_SIZE;
     }
     return force_read(page_id);
 }
@@ -52,7 +52,7 @@ ssize_t Page::write() {
     }
     std::memcpy(data_, &header, sizeof(page_header));
     ssize_t byte_count = io::write_page(header.id, data_);
-    if (byte_count == litedb::constants::PAGE_SIZE) {
+    if (byte_count == litedb::constants::DB_PAGE_SIZE) {
         dirty_ = false;
     }
     return byte_count;
@@ -69,7 +69,7 @@ bool Page::is_dirty() const {
 void Page::clear() {
     std::memset(&header, 0, sizeof(page_header));
     header.id = constants::INVALID_PAGE_ID;
-    std::memset(data_, 0, litedb::constants::PAGE_SIZE);
+    std::memset(data_, 0, litedb::constants::DB_PAGE_SIZE);
     dirty_ = false;
 }
 

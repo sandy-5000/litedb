@@ -43,15 +43,15 @@ void init_db_path(const std::string& path) {
         }
 
         if (
-            st.st_size % litedb::constants::PAGE_SIZE != 0 ||
-            st.st_size < static_cast<off_t>(litedb::constants::PAGE_SIZE)
+            st.st_size % litedb::constants::DB_PAGE_SIZE != 0 ||
+            st.st_size < static_cast<off_t>(litedb::constants::DB_PAGE_SIZE)
         ) {
             ::close(fd);
             throw std::runtime_error("Database file is not valid");
         }
         litedb::g::DB_FILE_DESCRIPTOR = fd;
         litedb::g::DB_FILE_PATH = path;
-        litedb::g::pages_count = st.st_size / litedb::constants::PAGE_SIZE;
+        litedb::g::pages_count = st.st_size / litedb::constants::DB_PAGE_SIZE;
     }
 
     struct flock fl{};
@@ -84,7 +84,7 @@ void print_hardware_config() {
     std::cout << std::endl;
     std::cout << "********** LiteDB **********" << std::endl;
     std::cout << "  Built std: " << __cplusplus << std::endl;
-    std::cout << "  Using Page Size: " << litedb::constants::PAGE_SIZE << std::endl;
+    std::cout << "  Using Page Size: " << litedb::constants::DB_PAGE_SIZE << std::endl;
     std::cout << "  Using File: " << litedb::g::DB_FILE_PATH << std::endl;
 
     // threads info

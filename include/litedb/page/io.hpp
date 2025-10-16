@@ -19,7 +19,7 @@ T read_align(uint32_t pageId, uint32_t offset) {
         litedb::g::DB_FILE_DESCRIPTOR,
         reinterpret_cast<char*>(&value),
         sizeof(T),
-        static_cast<off_t>(pageId) * litedb::constants::PAGE_SIZE + offset
+        static_cast<off_t>(pageId) * litedb::constants::DB_PAGE_SIZE + offset
     );
     if (n != sizeof(T)) {
         throw std::runtime_error("Failed to read value");
@@ -33,7 +33,7 @@ void write_align(uint32_t pageId, uint32_t offset, const T value) {
         litedb::g::DB_FILE_DESCRIPTOR,
         reinterpret_cast<const char*>(&value),
         sizeof(T),
-        static_cast<off_t>(pageId) * litedb::constants::PAGE_SIZE + offset
+        static_cast<off_t>(pageId) * litedb::constants::DB_PAGE_SIZE + offset
     );
     if (n != sizeof(T)) {
         throw std::runtime_error("Failed to write value");

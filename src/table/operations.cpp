@@ -45,7 +45,7 @@ bool root_table::create_table(const std::string &table_name) {
         new_page.header.id = new_root_table_page;
         new_page.header.type = 0x80;
         new_page.header.record_count = 0;
-        new_page.header.free_space_offset = constants::PAGE_SIZE;
+        new_page.header.free_space_offset = constants::DB_PAGE_SIZE;
         new_page.header.p_parent = 0;
         new_page.header.free_space = g::PAGE_BODY_SIZE;
 

@@ -1,6 +1,8 @@
 #pragma once
 
 #include <deque>
+#include <boost/thread/shared_mutex.hpp>
+#include <boost/thread/locks.hpp>
 
 #include "litedb/page/page.hpp"
 #include "litedb/page/io.hpp"
@@ -20,7 +22,7 @@ private:
     std::deque<uint32_t> free_pages_;
     int32_t max_batch;
 
-    mutable std::shared_mutex mtx_;
+    mutable boost::shared_mutex mtx_;
 
     void free_files_list_read();
     void free_files_list_write();

@@ -476,6 +476,11 @@ void find_tables() {
     std::cout << "========== [COMPLETED_FINDS] ==========\n";
 }
 
+void delete_tables() {
+    std::cout << "\n=========== [STARTED_DELETES] ===========\n";
+    std::cout << "========== [COMPLETED_DELETES] ==========\n";
+}
+
 int32_t main(int argc, char* argv[]) {
     if (argc < 2) {
         std::cout << "For storing needed a file path <file_name>.ldb" << std::endl;
@@ -498,10 +503,11 @@ int32_t main(int argc, char* argv[]) {
         return 1;
     }
 
-    compare_test();
+    // compare_test();
     // test_page_allocations();
     create_tables();
     find_tables();
+    // delete_tables();
 
     // std::vector<uint32_t> pages = {1, 34022, 4944};
     std::vector<uint32_t> pages = {};
@@ -511,6 +517,8 @@ int32_t main(int argc, char* argv[]) {
         std::shared_ptr<litedb::page::Page> page = buffer->get_page(i);
         litedb::table::utils::print_slot_page(page);
     }
+
+    std::cout << std::endl;
 
     return 0;
 }

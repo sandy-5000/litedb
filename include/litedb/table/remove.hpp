@@ -1,0 +1,18 @@
+#pragma once
+
+#include <cstdint>
+#include <string>
+
+namespace litedb::table {
+
+struct delete_responce {
+    uint32_t new_root_id;
+    std::string key;
+    std::string data;
+};
+
+struct remove final {
+    static delete_responce in_slot(uint32_t page_id, std::string &key);
+};
+
+}

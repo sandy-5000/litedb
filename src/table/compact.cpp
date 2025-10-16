@@ -9,7 +9,7 @@ namespace litedb::table {
 
 void compact_page::adjust(std::shared_ptr<litedb::page::Page> page, std::vector<uint16_t> &positions) {
     auto record_count = page->header.record_count;
-    uint16_t space_end = constants::PAGE_SIZE;
+    uint16_t space_end = constants::DB_PAGE_SIZE;
     for (int i = record_count; i-- > 0; ) {
         uint16_t old_offset = positions[i];
         uint16_t record_size;
