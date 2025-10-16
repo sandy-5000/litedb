@@ -74,6 +74,10 @@
         "sstream": "cpp",
         "stop_token": "cpp",
         "thread": "cpp",
-        "cinttypes": "cpp"
+        "cinttypes": "cpp",
+        "__split_buffer": "cpp",
+        "__hash_table": "cpp",
+        "__node_handle": "cpp",
+        "execution": "cpp"
     }
 }

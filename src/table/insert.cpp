@@ -3,6 +3,8 @@
 #include <memory>
 #include <vector>
 #include <string>
+#include <boost/thread/shared_mutex.hpp>
+#include <boost/thread/locks.hpp>
 
 #include "litedb/table/insert.hpp"
 #include "litedb/engine/buffer_manager.hpp"
@@ -65,7 +67,6 @@ std::vector<std::string> split_key_page(
     std::vector<std::string> &new_keys,
     uint16_t new_key_index
 ) {
-    // std::cout << "[SPLIT_PAGE] " << cur_page->header.id << " [TYPE] " << (int)cur_page->header.type << std::endl;
 
     uint16_t record_count = cur_page->header.record_count;
     if (new_key_index > record_count) {
@@ -326,15 +327,13 @@ uint32_t find_and_insert_key_page(
 
     auto buffer = engine::buffer_manager_->get_main_buffer();
     std::shared_ptr<litedb::page::Page> page = buffer->get_page(page_id);
-    page->lock_shared();
+
+    boost::upgrade_lock<boost::shared_mutex> read_lock(page->mutex());
+
     page->read(page_id);
 
     uint8_t type = page->header.type & 0xC0;
     bool is_internal = (type == 0xC0);
-    if (!is_internal) {
-        page->unlock_shared();
-        page->lock_unique();
-    }
 
     uint16_t* slot_ptr = reinterpret_cast<uint16_t*>(
         page->data_ + litedb::constants::PAGE_HEADER_SIZE
@@ -360,45 +359,37 @@ uint32_t find_and_insert_key_page(
         }
 
         parents.push_back(page_id);
-        page->unlock_shared();
+        read_lock.unlock();
 
         return find_and_insert_key_page(child_page_id, key, is_unique, changes, parents);
 
-    } else {
-
-        uint16_t index = find_in_slot(page, key);
-
-        if (is_unique && index > 0) {
-            uint8_t* prev_key_ptr = reinterpret_cast<uint8_t*>(
-                page->data_ + slot_ptr[index - 1]
-            );
-            uint8_t cmp = compare::keys(
-                reinterpret_cast<const uint8_t*>(key.c_str()),
-                prev_key_ptr, true
-            );
-            if (cmp == 0) {
-                page->unlock_unique();
-                return 0; // return 0 to indicate it is a duplicate key
-            }
-        }
-
-        parents.push_back(page_id);
-
-        uint32_t root_page_id = parents[0];
-        std::vector<std::string> split_keys = { key };
-
-        add_keys_to_page(
-            root_page_id,
-            split_keys,
-            changes,
-            parents,
-            0,
-            false
-        );
-        page->unlock_unique();
-
-        return root_page_id;
     }
+
+    boost::upgrade_to_unique_lock<boost::shared_mutex> write_lock(read_lock);
+
+    uint16_t index = find_in_slot(page, key);
+
+    if (is_unique && index > 0) {
+        uint8_t* prev_key_ptr = reinterpret_cast<uint8_t*>(
+            page->data_ + slot_ptr[index - 1]
+        );
+        uint8_t cmp = compare::keys(
+            reinterpret_cast<const uint8_t*>(key.c_str()),
+            prev_key_ptr, true
+        );
+        if (cmp == 0) {
+            return 0; // return 0 to indicate it is a duplicate key
+        }
+    }
+
+    parents.push_back(page_id);
+
+    uint32_t root_page_id = parents[0];
+    std::vector<std::string> split_keys = { key };
+
+    add_keys_to_page(root_page_id, split_keys, changes, parents, 0, false);
+
+    return root_page_id;
 }
 
 
