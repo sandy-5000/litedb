@@ -67,7 +67,7 @@ bool root_table::create_table(const std::string &table_name) {
     key[idx++] = TYPE_i64;
     std::memcpy(key.data() + idx, &seq_number, sizeof(uint64_t));
 
-    auto changes = insert::key(table_name, root_table_page, key, false);
+    auto changes = insert::key(root_table_page, key, false);
 
     if (changes.size()) {
         if (changes.back().change_type == 2) {

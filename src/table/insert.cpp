@@ -13,6 +13,7 @@
 #include "litedb/table/compare.hpp"
 #include "litedb/table/compact.hpp"
 #include "litedb/table/utils.hpp"
+#include "litedb/page/page.hpp"
 
 namespace litedb::table {
 
@@ -394,7 +395,7 @@ uint32_t find_and_insert_key_page(
 
 
 std::vector<key_page_change> insert::key (
-    std::string table_name, uint32_t root_page, std::string &key, bool is_unique
+    uint32_t root_page, std::string &key, bool is_unique
 ) {
     std::vector<key_page_change> changes;
     std::vector<uint32_t> parents;

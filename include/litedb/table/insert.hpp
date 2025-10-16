@@ -1,12 +1,8 @@
 #pragma once
 
 #include <cstdint>
-#include <memory>
 #include <vector>
 #include <string>
-
-#include "litedb/page/page.hpp"
-#include "litedb/engine/buffer_manager.hpp"
 
 namespace litedb::table {
 
@@ -22,7 +18,7 @@ struct key_page_change {
 
 struct insert final {
     static std::vector<key_page_change> key(
-        std::string table_name, uint32_t root_page, std::string &key, bool is_unique
+        uint32_t root_page, std::string &key, bool is_unique
     );
 };
 
