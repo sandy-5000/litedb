@@ -195,12 +195,11 @@ void check_table(uint32_t root_page_id) {
         return a.depth < b.depth;
     });
     for (const auto& entry : sts) {
-        printf(
-            "Page: %d | Depth : %lu, Status: [%s], cnt: %lu\n",
-            entry.page_id, entry.depth,
-            std::bitset<8>(entry.status).to_string().c_str(),
-            entry.cnt
-        );
+        std::cout << "Page: " << entry.page_id
+                  << " | Depth: " << entry.depth
+                  << ", Status: " << std::bitset<8>(entry.status).to_string().c_str()
+                  << ", cnt: " << entry.cnt
+                  << std::endl;
     }
 }
 

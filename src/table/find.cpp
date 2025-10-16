@@ -2,6 +2,7 @@
 #include <memory>
 #include <string>
 #include <cstring>
+#include <iostream>
 
 #include "litedb/table/find.hpp"
 #include "litedb/page/page.hpp"
@@ -29,6 +30,9 @@ std::string find_in_slot_page(uint32_t page_id, std::string &key, bool is_unique
         uint16_t record_count = page->header.record_count;
         uint16_t low = 0, high = record_count;
 
+        bool is_internal = (type == 0xC0);
+        int8_t cmp_flag = 0 - is_internal;
+
         while (low < high) {
             uint16_t mid = low + (high - low) / 2;
 
@@ -38,14 +42,13 @@ std::string find_in_slot_page(uint32_t page_id, std::string &key, bool is_unique
                 page->data_ + record_offset, is_unique
             );
 
-            if (cmp == -1) {
-                high = mid;
-            } else {
+            if (cmp > cmp_flag) {
                 low = mid + 1;
+            } else {
+                high = mid;
             }
         }
 
-        bool is_internal = (type == 0xC0);
         if (is_internal) {
             if (low == 0) {
                 page_id = page->header.leftmost_child;
@@ -58,10 +61,6 @@ std::string find_in_slot_page(uint32_t page_id, std::string &key, bool is_unique
             }
             page->unlock_shared();
         } else {
-            if (low == 0) {
-                return "";
-            }
-            --low;
             uint16_t offset = slot_ptr[low], key_size;
             std::memcpy(&key_size, page->data_ + offset, sizeof(uint16_t));
             page->unlock_shared();
