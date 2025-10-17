@@ -103,6 +103,7 @@ std::vector<std::string> split_key_page(
     uint16_t total_free_space = g::PAGE_BODY_SIZE;
 
     uint8_t page_type = cur_page->header.type;
+    uint32_t next_page = cur_page->header.next_page;
 
     std::shared_ptr<litedb::page::Page> page = cur_page;
     page->header.free_space_offset = constants::DB_PAGE_SIZE;
@@ -177,6 +178,8 @@ std::vector<std::string> split_key_page(
         page->header.record_count++;
         page->header.free_space -= sizeof(uint16_t);
     }
+
+    page->header.next_page = next_page;
 
     return parent_nodes;
 }
@@ -263,7 +266,7 @@ void add_keys_to_page(
         }
 
         uint8_t* old_ptr = reinterpret_cast<uint8_t*>(
-            page->data_ + constants::PAGE_HEADER_SIZE + 2 * index
+            page->data_ + constants::PAGE_HEADER_SIZE + sizeof(uint16_t) * index
         );
         uint16_t shift_size = new_keys.size() * sizeof(uint16_t);
         uint16_t date_size = (page->header.record_count - index) * sizeof(uint16_t);

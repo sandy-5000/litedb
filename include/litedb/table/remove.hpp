@@ -2,12 +2,13 @@
 
 #include <cstdint>
 #include <string>
+#include <vector>
 
 namespace litedb::table {
 
 struct delete_responce {
     uint32_t new_root_id;
-    std::string key;
+    uint64_t count;
     std::string data;
 };
 

@@ -29,6 +29,7 @@ g++ -std=c++20 -Iinclude \
     src/table/compare.cpp \
     src/table/find.cpp \
     src/table/insert.cpp \
+    src/table/remove.cpp \
     src/table/operations.cpp \
     src/table/utils.cpp \
     \

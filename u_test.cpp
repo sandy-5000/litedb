@@ -433,9 +433,6 @@ void create_tables() {
         }
     }
 
-    auto root_manager = litedb::engine::root_manager_;
-    uint32_t root_table_page = root_manager->page_data.root_table_page;
-
     std::cout << "\n[SUCCESS]: " << success_cnt << " [FAILED]: " << failed_cnt << "\n";
     std::cout << "========== [COMPLETED_INSERTS] ==========\n";
     // litedb::table::utils::check_table(root_table_page);
@@ -478,6 +475,20 @@ void find_tables() {
 
 void delete_tables() {
     std::cout << "\n=========== [STARTED_DELETES] ===========\n";
+
+    std::string key = "table__";
+    uint64_t success_cnt = 0, failed_cnt = 0;
+
+    for (int i = 1; i <= 10000000; ++i) {
+        auto nk = key + std::to_string(i);
+        bool flag = litedb::table::root_table::drop_table(nk);
+        flag ? ++success_cnt : ++failed_cnt;
+        if (flag && i % 1000000 == 0) {
+            std::cout << "[DROP_TABLE] " << nk << " success" << std::endl;
+        }
+    }
+
+    std::cout << "\n[SUCCESS]: " << success_cnt << " [FAILED]: " << failed_cnt << "\n";
     std::cout << "========== [COMPLETED_DELETES] ==========\n";
 }
 
