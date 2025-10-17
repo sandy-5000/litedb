@@ -1,9 +1,11 @@
 #include <vector>
+#include <iostream>
 #include <boost/thread/shared_mutex.hpp>
 #include <boost/thread/locks.hpp>
 
 #include "litedb/table/remove.hpp"
 #include "litedb/table/compare.hpp"
+#include "litedb/table/utils.hpp"
 #include "litedb/engine/store.hpp"
 #include "litedb/page/page.hpp"
 
@@ -247,14 +249,13 @@ delete_responce find_and_remove_key_page(
 
     if (is_internal) {
 
-        uint16_t offset = find_in_slot_d(page, key);
+        uint16_t index = find_in_slot_d(page, key);
         uint32_t child_page_id;
-        --offset;
 
-        if (offset == 0xFFFF) {
+        if (index == 0) {
             child_page_id = page->header.leftmost_child;
         } else {
-            uint16_t record_offset = slot_ptr[offset];
+            uint16_t record_offset = slot_ptr[--index];
             uint8_t* key_ptr = reinterpret_cast<uint8_t*>(
                 page->data_ + record_offset
             );
@@ -275,12 +276,12 @@ delete_responce find_and_remove_key_page(
 
     uint16_t index = find_in_slot_d(page, key);
 
-    uint8_t* prev_key_ptr = reinterpret_cast<uint8_t*>(
-        page->data_ + slot_ptr[index - 1]
+    uint8_t* key_ptr = reinterpret_cast<uint8_t*>(
+        page->data_ + slot_ptr[index]
     );
     uint8_t cmp = compare::keys(
         reinterpret_cast<const uint8_t*>(key.c_str()),
-        prev_key_ptr, true
+        key_ptr, true
     );
     if (cmp != 0) {
         return delete_responce{

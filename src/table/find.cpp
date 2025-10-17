@@ -61,6 +61,9 @@ std::string find_in_slot_page(uint32_t page_id, std::string &key, bool is_unique
             }
             page->unlock_shared();
         } else {
+            if (low == page->header.record_count) {
+                return std::string({0x04, 0x00, 0x04, 0x00});
+            }
             uint16_t offset = slot_ptr[low], key_size;
             std::memcpy(&key_size, page->data_ + offset, sizeof(uint16_t));
             page->unlock_shared();
