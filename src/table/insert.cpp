@@ -136,7 +136,7 @@ std::vector<std::string> split_key_page(
             page->header.next_page = new_page_id;
 
             uint8_t key_type = keys[i][2];
-            if (key_type == 0x02) {
+            if (key_type == 0x06) {
                 std::string parent_key_node = keys[i];
                 std::memcpy(parent_key_node.data() + 3, &new_page_id, sizeof(uint32_t));
 
@@ -154,7 +154,7 @@ std::vector<std::string> split_key_page(
 
                 uint16_t body_len = parent_key_node.size() - 8;
                 std::memcpy(parent_key_node.data() + 7, keys[i].data() + 3 + cur_shift, body_len);
-                parent_key_node[2] = 0x02;
+                parent_key_node[2] = 0x06;
                 std::memcpy(parent_key_node.data() + 3, &new_page_id, sizeof(uint32_t));
 
                 std::memcpy(parent_key_node.data(), &new_key_size, sizeof(uint16_t));
@@ -225,6 +225,7 @@ void add_keys_to_page(
         page->header.type = 0xC0;
         page->header.p_parent = 0;
         page->header.leftmost_child = leftmost_child;
+        page->header.next_page = 0;
     } else {
         page->read(page_id);
     }
@@ -356,7 +357,7 @@ uint32_t find_and_insert_key_page(
             uint8_t* key_ptr = reinterpret_cast<uint8_t*>(
                 page->data_ + record_offset
             );
-            if (key_ptr[2] != 0x02) {
+            if (key_ptr[2] != 0x06) {
                 return 0;
             }
             std::memcpy(&child_page_id, key_ptr + 3, sizeof(uint32_t));

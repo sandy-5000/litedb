@@ -49,6 +49,7 @@ bool root_table::create_table(const std::string &table_name) {
         new_page.header.free_space_offset = constants::DB_PAGE_SIZE;
         new_page.header.p_parent = 0;
         new_page.header.free_space = g::PAGE_BODY_SIZE;
+        new_page.header.next_page = 0;
 
         new_page.write();
     }
@@ -124,6 +125,13 @@ uint64_t root_table::drop_table(const std::string &table_name) {
         std::cout << "[DROP_TABLE] " << table_name << " failed" << std::endl;
         return false;
     }
+
+    if (root_table_page != responce.new_root_id) {
+        root_manager->lock_unique();
+        root_manager->page_data.root_table_page = responce.new_root_id;
+        root_manager->unlock_unique();
+    }
+
     return responce.count;
 }
 
@@ -142,7 +150,6 @@ std::string root_table::find_table(const std::string &table_name) {
 
     root_manager->lock_unique();
     uint32_t root_table_page = root_manager->page_data.root_table_page;
-    root_manager->page_data.seq_number++;
     root_manager->unlock_unique();
 
     if (root_table_page == 0) {

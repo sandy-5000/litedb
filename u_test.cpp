@@ -479,7 +479,7 @@ void delete_tables() {
     std::string key = "table__";
     uint64_t success_cnt = 0, failed_cnt = 0;
 
-    for (int i = 3000000; i <= 8000000; ++i) {
+    for (int i = 1; i <= 10000000; ++i) {
         auto nk = key + std::to_string(i);
         bool flag = litedb::table::root_table::drop_table(nk);
         flag ? ++success_cnt : ++failed_cnt;
@@ -487,7 +487,7 @@ void delete_tables() {
             std::cout << "[DROP_TABLE] " << nk << " success" << std::endl;
         }
         if (!flag) {
-            std::cout << "[DROP_TABLE] " << nk << " failed" << std::endl;
+            std::cout << "[DROP_TABLE] *" << nk << " failed" << std::endl;
         }
     }
 
@@ -519,7 +519,7 @@ int32_t main(int argc, char* argv[]) {
 
     // compare_test();
     // test_page_allocations();
-    create_tables();
+    // create_tables();
     delete_tables();
     find_tables();
 

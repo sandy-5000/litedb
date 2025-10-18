@@ -17,7 +17,14 @@ void print_key(uint8_t* key) {
     uint16_t key_size;
     std::memcpy(&key_size, key, sizeof(uint16_t));
     printf("Key: [%d][%02x] - ", key_size, key[2]);
-    uint8_t *ptr = key + 3 + compare::front_shift(key, key[2] & 0x7f);
+    uint16_t shift_size = compare::front_shift(key, key[2] & 0x7f);
+    uint8_t *ptr = key + 3 + shift_size;
+    if (key[2] == 0x06) {
+        uint32_t val;
+        std::memcpy(&val, key + 3, shift_size);
+        std::cout << "[page]";
+        std::cout << "[" << val << "] - ";
+    }
     uint8_t *ed = key + key_size - 1;
     while (ptr < ed) {
         uint8_t type = *ptr;
