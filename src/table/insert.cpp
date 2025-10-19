@@ -112,14 +112,13 @@ std::vector<std::string> split_key_page(
 
     std::vector<std::string> parent_nodes;
 
+    uint32_t leftmost_child = page->header.leftmost_child;
+
     for (uint16_t i = 0; i < keys.size(); ++i) {
         uint32_t free_space = page->header.free_space;
         int32_t free_space_percent = (free_space - keys[i].size() - sizeof(uint16_t)) * 100 / total_free_space;
 
-        if (
-            page->header.record_count > 0 &&
-            free_space_percent < 60
-        ) {
+        if (page->header.record_count > 0 && free_space_percent < 60) {
 
             uint32_t new_page_id = root_manager->get_free_page();
             std::shared_ptr<litedb::page::Page> new_page = buffer->get_page(new_page_id);
@@ -132,6 +131,7 @@ std::vector<std::string> split_key_page(
             new_page->header.free_space = total_free_space;
             new_page->header.type = page_type;
             new_page->header.p_parent = cur_page->header.p_parent;
+            new_page->header.leftmost_child = (page_type & 0xC0) == 0xC0 ? leftmost_child : 0;
 
             page->header.next_page = new_page_id;
 
@@ -162,6 +162,10 @@ std::vector<std::string> split_key_page(
             }
 
             page = new_page;
+        }
+
+        if (keys[i][2] == 0x06) {
+            std::memcmp(&leftmost_child, keys[i].data() + 3, sizeof(uint32_t));
         }
 
         uint16_t* slot_ptr = reinterpret_cast<uint16_t*>(
@@ -348,12 +352,11 @@ uint32_t find_and_insert_key_page(
 
         uint16_t offset = find_in_slot(page, key);
         uint32_t child_page_id;
-        --offset;
 
-        if (offset == 0xFFFF) {
+        if (offset == 0) {
             child_page_id = page->header.leftmost_child;
         } else {
-            uint16_t record_offset = slot_ptr[offset];
+            uint16_t record_offset = slot_ptr[--offset];
             uint8_t* key_ptr = reinterpret_cast<uint8_t*>(
                 page->data_ + record_offset
             );

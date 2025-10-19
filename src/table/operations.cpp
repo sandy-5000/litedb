@@ -50,6 +50,7 @@ bool root_table::create_table(const std::string &table_name) {
         new_page.header.p_parent = 0;
         new_page.header.free_space = g::PAGE_BODY_SIZE;
         new_page.header.next_page = 0;
+        new_page.header.leftmost_child = 0;
 
         new_page.write();
     }
@@ -122,7 +123,7 @@ uint64_t root_table::drop_table(const std::string &table_name) {
     auto responce = remove::in_slot(root_table_page, key);
 
     if (responce.new_root_id == 0) {
-        std::cout << "[DROP_TABLE] " << table_name << " failed" << std::endl;
+        // std::cout << "[DROP_TABLE] " << table_name << " failed" << std::endl;
         return false;
     }
 

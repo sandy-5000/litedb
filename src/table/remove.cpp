@@ -62,9 +62,6 @@ std::vector<std::string> merge_pages(
     uint16_t nxt_record_count = nxt_page->header.record_count;
 
     std::vector<std::string> keys(cur_record_count + nxt_record_count);
-    uint16_t* slot_ptr = reinterpret_cast<uint16_t*>(
-        cur_page->data_ + litedb::constants::PAGE_HEADER_SIZE
-    );
 
     uint16_t idx = 0;
 
@@ -74,6 +71,10 @@ std::vector<std::string> merge_pages(
     for (uint16_t i = 0; i < cur_record_count; ++i) {
         uint16_t offset = slot_ptr_1[i];
         uint16_t key_size;
+        if (key_size > 500) {
+            std::cout << "correpted " << cur_page->header.id << " " << key_size << " idx: " << i << ", ";
+            // utils::print_key(cur_page->data_ + offset);
+        }
         std::memcpy(&key_size, cur_page->data_ + offset, sizeof(uint16_t));
 
         keys[idx++] = std::move(
@@ -87,6 +88,10 @@ std::vector<std::string> merge_pages(
     for (uint16_t i = 0; i < nxt_record_count; ++i) {
         uint16_t offset = slot_ptr_2[i];
         uint16_t key_size;
+        if (key_size > 500) {
+            std::cout << "correpted " << nxt_page->header.id << " " << key_size << " idx: " << i << ", ";
+            // utils::print_key(nxt_page->data_ + offset);
+        }
         std::memcpy(&key_size, nxt_page->data_ + offset, sizeof(uint16_t));
 
         keys[idx++] = std::move(
@@ -126,6 +131,13 @@ std::vector<std::string> merge_pages(
     }
 
     // {
+    //     if (utils::check_slot_page(cur_page)) {
+    //         std::cout << "correpted at merge " << nxt_page->header.id << "\n";
+    //         utils::print_slot_page(nxt_page);
+    //     }
+    // }
+
+    // {
     //     std::cout << "___-__ " << cur_page->header.id << std::endl;
     //     utils::print_slot_page(cur_page);
     //     std::cout << "-------------------------- keys ------------\n";
@@ -158,7 +170,7 @@ void remove_keys_to_page(
     page->set_dirty();
     page->read(page_id);
 
-    uint32_t new_free_space = page->header.free_space;
+    int32_t new_free_space = static_cast<int32_t>(page->header.free_space);
     for (auto &key : old_keys) {
         new_free_space += key.size() + sizeof(uint16_t);
     }
@@ -167,6 +179,12 @@ void remove_keys_to_page(
 
     uint8_t type = page->header.type & 0xC0;
     bool is_internal = (type == 0xC0);
+
+    // if (old_keys.size() != 1) {
+    //     std::cout << "panic::::::::: " << old_keys.size() << " ";
+    //     utils::print_key(reinterpret_cast<uint8_t *>(old_keys[0].data()));
+    // }
+
     if (is_internal && index > 0) {
         --index;
     }
@@ -179,6 +197,15 @@ void remove_keys_to_page(
     //     std::cout << "______ " << page->header.id << std::endl;
     //     utils::print_slot_page(page);
     // }
+
+
+
+    // std::shared_ptr<litedb::page::Page> backup_page = std::make_shared<litedb::page::Page>();
+    // {
+    //     std::memcpy(backup_page->data_, page->data_, constants::DB_PAGE_SIZE);
+    //     std::memcpy(&(backup_page->header), &(page->header), 48);
+    // }
+
 
     uint16_t* slot_ptr = reinterpret_cast<uint16_t*>(
         page->data_ + constants::PAGE_HEADER_SIZE
@@ -215,9 +242,23 @@ void remove_keys_to_page(
 
     int32_t free_space_percent = new_free_space * 100 / total_free_space;
 
-    // if (page_id == 1) {
+    // if (page_id == 16669) {
     //     std::cout << "*_____ " << page->header.id << std::endl;
     //     utils::print_slot_page(page);
+    // }
+
+    // {
+    //     if (utils::check_slot_page(page)) {
+    //         for (auto k : old_keys) {
+    //             utils::print_key(reinterpret_cast<uint8_t *>(k.data()));
+    //         }
+    //         std::cout << "page : " << page->header.id << "\n";
+    //         std::cout << "before :\n";
+    //         std::cout << "count : " << backup_page->header.record_count << "\n";
+    //         utils::print_slot_sizes(backup_page);
+    //         std::cout << "\ncount : " << page->header.record_count << "\n";
+    //         utils::print_slot_sizes(page);
+    //     }
     // }
 
     if (free_space_percent < 65) {
@@ -248,7 +289,7 @@ void remove_keys_to_page(
     next_page->lock_unique();
     next_page->read(next_page_id);
 
-    free_space_percent = (new_free_space + next_page->header.free_space) * 100 / total_free_space;
+    free_space_percent = (new_free_space + static_cast<int32_t>(next_page->header.free_space)) * 100 / total_free_space;
 
     if (free_space_percent < 45) {
         next_page->unlock_unique();
@@ -323,12 +364,12 @@ delete_responce find_and_remove_key_page(
         key_ptr, true
     );
     if (cmp != 0) {
-        std::cout << "[NO_MATCH] page_id: " << page_id << "\n";
-        std::cout << "[COUNT] page_id: " << page->header.record_count << "\n";
-        utils::print_key(key_ptr);
-        if (page_id == 1) {
-            utils::print_slot_page(page);
-        }
+        // std::cout << "[NO_MATCH] page_id: " << page_id << "\n";
+        // std::cout << "[COUNT] page_id: " << page->header.record_count << "\n";
+        // utils::print_key(key_ptr);
+        // if (page_id == 1) {
+        //     utils::print_slot_page(page);
+        // }
         return delete_responce{
             .new_root_id = parents[0],
             .count = 0
