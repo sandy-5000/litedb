@@ -7,7 +7,8 @@
                 "/usr/include",
                 "/usr/local/include",
                 "/usr/local/include/bsoncxx/v_noabi",
-                "/usr/local/include/mongocxx/v_noabi"
+                "/usr/local/include/mongocxx/v_noabi",
+                "/usr/include/boost/"
             ],
             "defines": [],
             "compilerPath": "/usr/bin/g++",

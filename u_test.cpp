@@ -538,9 +538,9 @@ int32_t main(int argc, char* argv[]) {
 
     // compare_test();
     // test_page_allocations();
-    // create_tables();
-    delete_tables();
-    // find_tables();
+    create_tables();
+    // delete_tables();
+    find_tables();
 
     // std::vector<uint32_t> pages = {1, 34022, 4944, 68774, 85065, 85067};
     std::vector<uint32_t> pages = {};

@@ -134,8 +134,8 @@ void print_slot_sizes(std::shared_ptr<litedb::page::Page> page) {
     }
 }
 
-uint64_t count_link(uint32_t page_id, uint32_t page_count) {
-    uint64_t count = 0, c_count = 0;
+std::pair<uint64_t, uint64_t> count_link(uint32_t page_id, uint32_t page_count) {
+    uint64_t count = 0, c_count = 0, size = 0;
     uint32_t last_child = 0;
     while (page_id > 0) {
         if (page_id > page_count) {
@@ -171,12 +171,12 @@ uint64_t count_link(uint32_t page_id, uint32_t page_count) {
             }
             flag && ++c_count;
         }
-
+        ++size;
         count += page->header.record_count;
         page_id = page->header.next_page;
     }
     std::cout << " | [last_child]: " << last_child << ", [corrupted]: " << c_count;
-    return count;
+    return {count, size};
 }
 
 void check_tree_links(uint32_t root_page_id, uint32_t page_count) {
@@ -186,8 +186,8 @@ void check_tree_links(uint32_t root_page_id, uint32_t page_count) {
         auto buffer = litedb::engine::buffer_manager_->get_main_buffer();
         std::shared_ptr<litedb::page::Page> page = buffer->get_page(page_id);
         page->read(page_id);
-        uint64_t count = count_link(page_id, page_count);
-        std::cout << " | Depth: " << depth << " count: " << count << std::endl;
+        auto [count, size] = count_link(page_id, page_count);
+        std::cout << " | Depth: " << depth << " count: " << count << " size: " << size << std::endl;
         ++depth;
         page_id = page->header.leftmost_child;
     }
