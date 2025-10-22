@@ -130,8 +130,6 @@ std::vector<std::string> split_key_page(
                 parent_nodes.emplace_back(parent_key_node);
             }
 
-            // utils::print_slot_page(page);
-            // std::cout << "===========================\n";
             page = new_page;
         }
 
