@@ -228,7 +228,17 @@ void add_keys_to_page(
         page->read(page_id);
     }
 
-    uint16_t index = find::position_in_slot(page, new_keys.back(), false);
+    uint16_t index = 0;
+    while (!is_new_page) {
+        index = find::position_in_slot(page, new_keys.back(), false);
+        if (index < page->header.record_count) {
+            break;
+        }
+        page_id = page->header.next_page;
+        page->unlock_unique();
+        page = buffer->get_page(page_id);
+        page->lock_unique();
+    }
 
     uint16_t* slot_ptr = reinterpret_cast<uint16_t*>(
         page->data_ + constants::PAGE_HEADER_SIZE
@@ -352,8 +362,6 @@ uint32_t find_and_insert_key_page(
 
     auto buffer = engine::buffer_manager_->get_main_buffer();
 
-    int cnt = 0;
-
     while (page_id) {
         std::shared_ptr<litedb::page::Page> page = buffer->get_page(page_id);
 
@@ -416,11 +424,6 @@ uint32_t find_and_insert_key_page(
 
         uint32_t root_page_id = parents[0];
         std::vector<std::string> split_keys = { key };
-
-        if (cnt > 10) {
-            std::cout << cnt << " ";
-            utils::print_key(reinterpret_cast<uint8_t *>(key.data()));
-        }
 
         add_keys_to_page(
             root_page_id,
