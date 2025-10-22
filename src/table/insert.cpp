@@ -10,8 +10,9 @@
 #include "litedb/engine/buffer_manager.hpp"
 #include "litedb/engine/store.hpp"
 #include "litedb/table/slot.hpp"
-#include "litedb/table/compare.hpp"
+#include "litedb/table/key.hpp"
 #include "litedb/table/compact.hpp"
+#include "litedb/table/find.hpp"
 #include "litedb/table/utils.hpp"
 #include "litedb/page/page.hpp"
 
@@ -30,37 +31,6 @@ uint8_t is_insertable(
         return 1;
     }
     return 0;
-}
-
-uint16_t find_in_slot(std::shared_ptr<litedb::page::Page> page, std::string &key) {
-    if (!page) {
-        throw std::invalid_argument("[find_in_slot] PAGE: nullptr");
-    }
-
-    uint16_t* slot_ptr = reinterpret_cast<uint16_t*>(
-        page->data_ + litedb::constants::PAGE_HEADER_SIZE
-    );
-
-    uint16_t record_count = page->header.record_count;
-    uint16_t low = 0, high = record_count;
-
-    while (low < high) {
-        uint16_t mid = low + (high - low) / 2;
-
-        uint16_t record_offset = slot_ptr[mid];
-        int8_t cmp = compare::keys(
-            reinterpret_cast<const uint8_t*>(key.c_str()),
-            page->data_ + record_offset, false
-        );
-
-        if (cmp == -1) {
-            high = mid;
-        } else {
-            low = mid + 1;
-        }
-    }
-
-    return low;
 }
 
 std::vector<std::string> split_key_page(
@@ -112,9 +82,8 @@ std::vector<std::string> split_key_page(
 
     std::vector<std::string> parent_nodes;
 
-    uint32_t leftmost_child = page->header.leftmost_child;
-
-    for (uint16_t i = 0; i < keys.size(); ++i) {
+    uint16_t keys_size = keys.size();
+    for (uint16_t i = 0; i < keys_size; ++i) {
         uint32_t free_space = page->header.free_space;
         int32_t free_space_percent = (free_space - keys[i].size() - sizeof(uint16_t)) * 100 / total_free_space;
 
@@ -131,41 +100,39 @@ std::vector<std::string> split_key_page(
             new_page->header.free_space = total_free_space;
             new_page->header.type = page_type;
             new_page->header.p_parent = cur_page->header.p_parent;
-            new_page->header.leftmost_child = (page_type & 0xC0) == 0xC0 ? leftmost_child : 0;
 
             page->header.next_page = new_page_id;
+            uint32_t c_page_id = page->header.id;
 
-            uint8_t key_type = keys[i][2];
+            uint8_t key_type = keys[i - 1][2];
             if (key_type == 0x06) {
-                std::string parent_key_node = keys[i];
-                std::memcpy(parent_key_node.data() + 3, &new_page_id, sizeof(uint32_t));
+                std::string parent_key_node = keys[i - 1];
+                std::memcpy(parent_key_node.data() + 3, &c_page_id, sizeof(uint32_t));
 
                 parent_nodes.emplace_back(parent_key_node);
             } else {
 
-                uint16_t cur_shift = compare::front_shift(
-                    reinterpret_cast<uint8_t *>(keys[i].data()), key_type
+                uint16_t cur_shift = key::front_shift(
+                    reinterpret_cast<uint8_t *>(keys[i - 1].data()), key_type
                 );
 
                 bool has_seq = key_type & 0x80;
                 uint16_t back_shift = has_seq ? 9 : 0;
-                uint16_t new_key_size = keys[i].size() + 4 - cur_shift - back_shift;
+                uint16_t new_key_size = keys[i - 1].size() + 4 - cur_shift - back_shift;
                 std::string parent_key_node(new_key_size, 0);
 
                 uint16_t body_len = parent_key_node.size() - 8;
-                std::memcpy(parent_key_node.data() + 7, keys[i].data() + 3 + cur_shift, body_len);
+                std::memcpy(parent_key_node.data() + 7, keys[i - 1].data() + 3 + cur_shift, body_len);
                 parent_key_node[2] = 0x06;
-                std::memcpy(parent_key_node.data() + 3, &new_page_id, sizeof(uint32_t));
+                std::memcpy(parent_key_node.data() + 3, &c_page_id, sizeof(uint32_t));
 
                 std::memcpy(parent_key_node.data(), &new_key_size, sizeof(uint16_t));
                 parent_nodes.emplace_back(parent_key_node);
             }
 
+            // utils::print_slot_page(page);
+            // std::cout << "===========================\n";
             page = new_page;
-        }
-
-        if (keys[i][2] == 0x06) {
-            std::memcmp(&leftmost_child, keys[i].data() + 3, sizeof(uint32_t));
         }
 
         uint16_t* slot_ptr = reinterpret_cast<uint16_t*>(
@@ -185,6 +152,34 @@ std::vector<std::string> split_key_page(
 
     page->header.next_page = next_page;
 
+    {
+        uint8_t key_type = keys.back()[2];
+        if (key_type == 0x06) {
+            std::string parent_key_node = keys.back();
+            std::memcpy(parent_key_node.data() + 3, &(page->header.id), sizeof(uint32_t));
+
+            parent_nodes.emplace_back(parent_key_node);
+        } else {
+
+            uint16_t cur_shift = key::front_shift(
+                reinterpret_cast<uint8_t *>(keys.back().data()), key_type
+            );
+
+            bool has_seq = key_type & 0x80;
+            uint16_t back_shift = has_seq ? 9 : 0;
+            uint16_t new_key_size = keys.back().size() + 4 - cur_shift - back_shift;
+            std::string parent_key_node(new_key_size, 0);
+
+            uint16_t body_len = parent_key_node.size() - 8;
+            std::memcpy(parent_key_node.data() + 7, keys.back().data() + 3 + cur_shift, body_len);
+            parent_key_node[2] = 0x06;
+            std::memcpy(parent_key_node.data() + 3, &(page->header.id), sizeof(uint32_t));
+
+            std::memcpy(parent_key_node.data(), &new_key_size, sizeof(uint16_t));
+            parent_nodes.emplace_back(parent_key_node);
+        }
+    }
+
     return parent_nodes;
 }
 
@@ -193,8 +188,7 @@ void add_keys_to_page(
     std::vector<std::string> &new_keys,
     std::vector<key_page_change> &changes,
     std::vector<uint32_t> &parents,
-    uint32_t leftmost_child,
-    bool lock_it
+    std::optional<boost::upgrade_to_unique_lock<boost::shared_mutex>> write_lock_opt = std::nullopt
 ) {
     uint32_t page_id;
     bool is_new_page = false;
@@ -215,7 +209,8 @@ void add_keys_to_page(
 
     auto buffer = engine::buffer_manager_->get_main_buffer();
     std::shared_ptr<litedb::page::Page> page = buffer->get_page(page_id);
-    if (lock_it) {
+
+    if (!write_lock_opt) {
         page->lock_unique();
     }
     page->set_dirty();
@@ -228,17 +223,24 @@ void add_keys_to_page(
         page->header.free_space = g::PAGE_BODY_SIZE;
         page->header.type = 0xC0;
         page->header.p_parent = 0;
-        page->header.leftmost_child = leftmost_child;
         page->header.next_page = 0;
     } else {
         page->read(page_id);
     }
 
-    uint16_t index = find_in_slot(page, new_keys[0]);
+    uint16_t index = find::position_in_slot(page, new_keys.back(), false);
 
     uint16_t* slot_ptr = reinterpret_cast<uint16_t*>(
         page->data_ + constants::PAGE_HEADER_SIZE
     );
+
+    if (!is_new_page && (page->header.type & 0xC0) == 0xC0) {
+        uint16_t offset = slot_ptr[index];
+        uint32_t child_page_id;
+        std::memcpy(&child_page_id, new_keys.back().data() + 3, sizeof(uint32_t));
+        std::memcpy(page->data_ + offset + 3, &child_page_id, sizeof(uint32_t));
+        new_keys.pop_back();
+    }
 
     uint16_t total_key_size = 0;
     for (auto key : new_keys) {
@@ -258,7 +260,8 @@ void add_keys_to_page(
         }
 
         uint16_t idx = 0;
-        std::vector<uint16_t> start_offsets(new_keys.size());
+        uint16_t new_keys_size = new_keys.size();
+        std::vector<uint16_t> start_offsets(new_keys_size);
         for (auto &key : new_keys) {
             uint16_t free_space_offset = page->header.free_space_offset;
             uint16_t start_offset = free_space_offset - key.size();
@@ -273,21 +276,31 @@ void add_keys_to_page(
         uint8_t* old_ptr = reinterpret_cast<uint8_t*>(
             page->data_ + constants::PAGE_HEADER_SIZE + sizeof(uint16_t) * index
         );
-        uint16_t shift_size = new_keys.size() * sizeof(uint16_t);
-        uint16_t date_size = (page->header.record_count - index) * sizeof(uint16_t);
+        uint16_t shift_size = new_keys_size * sizeof(uint16_t);
         uint8_t* new_ptr = old_ptr + shift_size;
 
+        uint16_t date_size = (page->header.record_count - index) * sizeof(uint16_t);
         std::memmove(new_ptr, old_ptr, date_size);
         std::memcpy(old_ptr, start_offsets.data(), start_offsets.size() * sizeof(uint16_t));
-        page->header.record_count += new_keys.size();
-        page->header.free_space -= new_keys.size() * sizeof(uint16_t);
+        page->header.record_count += new_keys_size;
+        page->header.free_space -= new_keys_size * sizeof(uint16_t);
 
         key_page_change change{
-            .old_data = {.slot_index = index},
+            .old_data = {
+                .slot_info = std::make_pair(index, new_keys_size)
+            },
             .page_id = page_id,
             .change_type = 0
         };
         changes.push_back(change);
+
+        if (write_lock_opt) {
+            if (write_lock_opt->owns_lock()) {
+                write_lock_opt.reset();
+            }
+        } else {
+            page->unlock_unique();
+        }
 
     } else {
         uint8_t* copied_page_data = nullptr;
@@ -310,19 +323,22 @@ void add_keys_to_page(
             index
         );
 
+        if (write_lock_opt) {
+            if (write_lock_opt->owns_lock()) {
+                write_lock_opt.reset();
+            }
+        } else {
+            page->unlock_unique();
+        }
+
         add_keys_to_page(
             root_page_id,
             split_keys,
             changes,
             parents,
-            parents.size() ? 0 : page_id,
-            true
+            std::nullopt
         );
 
-    }
-
-    if (lock_it) {
-        page->unlock_unique();
     }
 }
 
@@ -330,33 +346,42 @@ uint32_t find_and_insert_key_page(
     uint32_t page_id,
     std::string &key,
     bool is_unique,
-    std::vector<key_page_change> &changes,
-    std::vector<uint32_t> &parents
+    std::vector<key_page_change> &changes
 ) {
+    std::vector<uint32_t> parents;
 
     auto buffer = engine::buffer_manager_->get_main_buffer();
-    std::shared_ptr<litedb::page::Page> page = buffer->get_page(page_id);
 
-    boost::upgrade_lock<boost::shared_mutex> read_lock(page->mutex());
+    int cnt = 0;
 
-    page->read(page_id);
+    while (page_id) {
+        std::shared_ptr<litedb::page::Page> page = buffer->get_page(page_id);
 
-    uint8_t type = page->header.type & 0xC0;
-    bool is_internal = (type == 0xC0);
+        boost::upgrade_lock<boost::shared_mutex> read_lock(page->mutex());
 
-    uint16_t* slot_ptr = reinterpret_cast<uint16_t*>(
-        page->data_ + litedb::constants::PAGE_HEADER_SIZE
-    );
+        page->read(page_id);
 
-    if (is_internal) {
+        uint8_t type = page->header.type & 0xC0;
+        bool is_internal = (type == 0xC0);
 
-        uint16_t offset = find_in_slot(page, key);
-        uint32_t child_page_id;
+        uint16_t* slot_ptr = reinterpret_cast<uint16_t*>(
+            page->data_ + litedb::constants::PAGE_HEADER_SIZE
+        );
 
-        if (offset == 0) {
-            child_page_id = page->header.leftmost_child;
-        } else {
-            uint16_t record_offset = slot_ptr[--offset];
+        uint16_t index = find::position_in_slot(page, key, false);
+
+        if (index == page->header.record_count) {
+            read_lock.unlock();
+            page_id = page->header.next_page;
+            return 0;
+            continue;
+        }
+
+        if (is_internal) {
+
+            uint32_t child_page_id;
+
+            uint16_t record_offset = slot_ptr[index];
             uint8_t* key_ptr = reinterpret_cast<uint8_t*>(
                 page->data_ + record_offset
             );
@@ -364,40 +389,51 @@ uint32_t find_and_insert_key_page(
                 return 0;
             }
             std::memcpy(&child_page_id, key_ptr + 3, sizeof(uint32_t));
+
+            parents.push_back(page_id);
+            read_lock.unlock();
+
+            page_id = child_page_id;
+            continue;
         }
+
+        if (is_unique) {
+            uint8_t* index_key_ptr = reinterpret_cast<uint8_t*>(
+                page->data_ + slot_ptr[index]
+            );
+            uint8_t cmp = key::compare(
+                reinterpret_cast<const uint8_t*>(key.c_str()),
+                index_key_ptr, true
+            );
+            if (cmp == 0) {
+                return 0;
+            }
+        }
+
+        boost::upgrade_to_unique_lock<boost::shared_mutex> write_lock(read_lock);
 
         parents.push_back(page_id);
-        read_lock.unlock();
 
-        return find_and_insert_key_page(child_page_id, key, is_unique, changes, parents);
+        uint32_t root_page_id = parents[0];
+        std::vector<std::string> split_keys = { key };
 
-    }
-
-    boost::upgrade_to_unique_lock<boost::shared_mutex> write_lock(read_lock);
-
-    uint16_t index = find_in_slot(page, key);
-
-    if (is_unique && index > 0) {
-        uint8_t* prev_key_ptr = reinterpret_cast<uint8_t*>(
-            page->data_ + slot_ptr[index - 1]
-        );
-        uint8_t cmp = compare::keys(
-            reinterpret_cast<const uint8_t*>(key.c_str()),
-            prev_key_ptr, true
-        );
-        if (cmp == 0) {
-            return 0; // return 0 to indicate it is a duplicate key
+        if (cnt > 10) {
+            std::cout << cnt << " ";
+            utils::print_key(reinterpret_cast<uint8_t *>(key.data()));
         }
+
+        add_keys_to_page(
+            root_page_id,
+            split_keys,
+            changes,
+            parents,
+            std::move(write_lock)
+        );
+
+        return root_page_id;
     }
 
-    parents.push_back(page_id);
-
-    uint32_t root_page_id = parents[0];
-    std::vector<std::string> split_keys = { key };
-
-    add_keys_to_page(root_page_id, split_keys, changes, parents, 0, false);
-
-    return root_page_id;
+    return 0;
 }
 
 
@@ -405,14 +441,12 @@ std::vector<key_page_change> insert::key (
     uint32_t root_page, std::string &key, bool is_unique
 ) {
     std::vector<key_page_change> changes;
-    std::vector<uint32_t> parents;
 
     auto new_root_page = find_and_insert_key_page(
         root_page,
         key,
         is_unique,
-        changes,
-        parents
+        changes
     );
 
     if (new_root_page == 0) {

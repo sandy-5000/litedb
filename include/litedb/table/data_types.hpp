@@ -9,5 +9,6 @@ inline static constexpr uint8_t TYPE_str = 0x02;
 inline static constexpr uint8_t TYPE_u8  = 0x08;
 inline static constexpr uint8_t TYPE_i32 = 0x10;
 inline static constexpr uint8_t TYPE_i64 = 0x12;
+inline static constexpr uint8_t TYPE_max = 0xFF;
 
 }

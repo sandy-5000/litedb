@@ -26,7 +26,7 @@ g++ -std=c++20 -Iinclude \
     src/engine/store.cpp \
     \
     src/table/compact.cpp \
-    src/table/compare.cpp \
+    src/table/key.cpp \
     src/table/find.cpp \
     src/table/insert.cpp \
     src/table/remove.cpp \

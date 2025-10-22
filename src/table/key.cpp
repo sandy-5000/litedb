@@ -3,12 +3,12 @@
 #include <cstdint>
 #include <cstring>
 
-#include "litedb/table/compare.hpp"
+#include "litedb/table/key.hpp"
 #include "litedb/table/data_types.hpp"
 
 namespace litedb::table {
 
-uint16_t compare::front_shift(const uint8_t* key, const uint8_t type) {
+uint16_t key::front_shift(const uint8_t* key, const uint8_t type) {
     switch (type) {
         case 0x00:
         case 0x05: {
@@ -35,7 +35,7 @@ uint16_t compare::front_shift(const uint8_t* key, const uint8_t type) {
 }
 
 
-int8_t compare::keys(const uint8_t* key_a, const uint8_t* key_b, bool unique) {
+int8_t key::compare(const uint8_t* key_a, const uint8_t* key_b, bool unique) {
 
     uint16_t len_a;
     std::memcpy(&len_a, key_a, sizeof(uint16_t));
@@ -138,6 +138,10 @@ int8_t compare::keys(const uint8_t* key_a, const uint8_t* key_b, bool unique) {
                 if (a != b) {
                     return a < b ? -1 : 1;
                 }
+                break;
+            }
+
+            case TYPE_max: {
                 break;
             }
 

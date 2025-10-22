@@ -6,7 +6,7 @@
 
 #include "litedb/table/utils.hpp"
 #include "litedb/table/data_types.hpp"
-#include "litedb/table/compare.hpp"
+#include "litedb/table/key.hpp"
 #include "litedb/page/page.hpp"
 #include "litedb/constants.hpp"
 #include "litedb/engine/store.hpp"
@@ -17,7 +17,7 @@ void print_key(uint8_t* key) {
     uint16_t key_size;
     std::memcpy(&key_size, key, sizeof(uint16_t));
     printf("Key: [%d][%02x] - ", key_size, key[2]);
-    uint16_t shift_size = compare::front_shift(key, key[2] & 0x7f);
+    uint16_t shift_size = key::front_shift(key, key[2] & 0x7f);
     uint8_t *ptr = key + 3 + shift_size;
     if (key[2] == 0x06) {
         uint32_t val;
@@ -73,6 +73,10 @@ void print_key(uint8_t* key) {
                 ptr += sizeof(int64_t);
                 std::cout << "[i64]";
                 std::cout << "[" << a << "]";
+                break;
+            }
+            case TYPE_max: {
+                std::cout << "[inf]";
                 break;
             }
             default:
@@ -134,41 +138,6 @@ void print_slot_sizes(std::shared_ptr<litedb::page::Page> page) {
     }
 }
 
-std::pair<uint64_t, uint64_t> check_edge_links(uint32_t page_id, uint32_t page_count) {
-    uint64_t con = 0, ncon = 0;
-    auto buffer = litedb::engine::buffer_manager_->get_main_buffer();
-    while (page_id > 0) {
-        std::shared_ptr<litedb::page::Page> page = buffer->get_page(page_id);
-        page->read(page_id);
-        uint8_t type = page->header.type & 0xC0;
-        if (type == 0x80) {
-            return {0, 0};
-        }
-        uint32_t next_page_id = page->header.next_page;
-        if (next_page_id == 0) {
-            break;
-        }
-
-        uint16_t* slot_ptr = reinterpret_cast<uint16_t*>(
-            page->data_ + constants::PAGE_HEADER_SIZE
-        );
-        uint32_t p_last_child;
-        std::memcpy(&p_last_child, page->data_ + slot_ptr[page->header.record_count - 1] + 3, sizeof(uint32_t));
-
-        std::shared_ptr<litedb::page::Page> nxt_page = buffer->get_page(next_page_id);
-        nxt_page->read(next_page_id);
-
-        if (p_last_child != nxt_page->header.leftmost_child) {
-            ++ncon;
-        } else {
-            ++con;
-        }
-
-        page_id = next_page_id;
-    }
-    return {con, ncon};
-}
-
 std::pair<uint64_t, uint64_t> count_link(uint32_t page_id, uint32_t page_count) {
     auto buffer = litedb::engine::buffer_manager_->get_main_buffer();
     uint64_t count = 0, c_count = 0, size = 0;
@@ -222,11 +191,16 @@ void check_tree_links(uint32_t root_page_id, uint32_t page_count) {
         std::shared_ptr<litedb::page::Page> page = buffer->get_page(page_id);
         page->read(page_id);
         auto [count, size] = count_link(page_id, page_count);
-        auto [con, ncon] = check_edge_links(page_id, page_count);
         std::cout << " | Depth: " << depth << " count: " << count << " size: " << size << std::endl;
-        std::cout << "=> Edges: [" << con << ", " << ncon << "]" << std::endl;
         ++depth;
-        page_id = page->header.leftmost_child;
+        if ((page->header.type & 0xC0) == 0x80) {
+            page_id = 0;
+        } else {
+            uint16_t* slot_ptr = reinterpret_cast<uint16_t*>(
+                page->data_ + constants::PAGE_HEADER_SIZE
+            );
+            std::memcpy(&page_id, page->data_ + slot_ptr[0] + 3, sizeof(uint32_t));
+        }
     }
 }
 

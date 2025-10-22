@@ -4,7 +4,7 @@
 #include <boost/thread/locks.hpp>
 
 #include "litedb/table/remove.hpp"
-#include "litedb/table/compare.hpp"
+#include "litedb/table/key.hpp"
 #include "litedb/table/utils.hpp"
 #include "litedb/engine/store.hpp"
 #include "litedb/page/page.hpp"
@@ -31,7 +31,7 @@ uint16_t find_in_slot_d(std::shared_ptr<litedb::page::Page> page, std::string &k
         uint16_t mid = low + (high - low) / 2;
 
         uint16_t record_offset = slot_ptr[mid];
-        int8_t cmp = compare::keys(
+        int8_t cmp = key::compare(
             reinterpret_cast<const uint8_t*>(key.c_str()),
             page->data_ + record_offset, false
         );
@@ -333,7 +333,7 @@ delete_responce find_and_remove_key_page(
         uint32_t child_page_id;
 
         if (index == 0) {
-            child_page_id = page->header.leftmost_child;
+            // child_page_id = page->header.leftmost_child;
         } else {
             uint16_t record_offset = slot_ptr[--index];
             uint8_t* key_ptr = reinterpret_cast<uint8_t*>(
@@ -359,7 +359,7 @@ delete_responce find_and_remove_key_page(
     uint8_t* key_ptr = reinterpret_cast<uint8_t*>(
         page->data_ + slot_ptr[index]
     );
-    uint8_t cmp = compare::keys(
+    uint8_t cmp = key::compare(
         reinterpret_cast<const uint8_t*>(key.c_str()),
         key_ptr, true
     );

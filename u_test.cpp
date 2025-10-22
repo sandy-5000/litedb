@@ -11,7 +11,7 @@
 #include "litedb/engine/root_manager.hpp"
 #include "litedb/engine/buffer_manager.hpp"
 #include "litedb/table/data_types.hpp"
-#include "litedb/table/compare.hpp"
+#include "litedb/table/key.hpp"
 #include "litedb/table/operations.hpp"
 #include "litedb/table/utils.hpp"
 
@@ -100,7 +100,7 @@ void compare_test() {
         finsh_key(key_a);
         finsh_key(key_b);
 
-        int8_t res = compare::keys(key_a.data(), key_b.data(), false);
+        int8_t res = key::compare(key_a.data(), key_b.data(), false);
         std::cout << "Test " << test_no << " (identical strings): " << static_cast<int>(res) << " (expected 0)\n";
     }
 
@@ -117,7 +117,7 @@ void compare_test() {
         finsh_key(key_a);
         finsh_key(key_b);
 
-        int8_t res = compare::keys(key_a.data(), key_b.data(), false);
+        int8_t res = key::compare(key_a.data(), key_b.data(), false);
         std::cout << "Test " << test_no << " (different strings): " << static_cast<int>(res) << " (expected -1)\n";
     }
 
@@ -134,7 +134,7 @@ void compare_test() {
         finsh_key(key_a);
         finsh_key(key_b);
 
-        int8_t res = compare::keys(key_a.data(), key_b.data(), false);
+        int8_t res = key::compare(key_a.data(), key_b.data(), false);
         std::cout << "Test " << test_no << " (identical int32): " << static_cast<int>(res) << " (expected 0)\n";
     }
 
@@ -151,7 +151,7 @@ void compare_test() {
         finsh_key(key_a);
         finsh_key(key_b);
 
-        int8_t res = compare::keys(key_a.data(), key_b.data(), false);
+        int8_t res = key::compare(key_a.data(), key_b.data(), false);
         std::cout << "Test " << test_no << " (different int32): " << static_cast<int>(res) << " (expected -1)\n";
     }
 
@@ -168,7 +168,7 @@ void compare_test() {
         finsh_key(key_a);
         finsh_key(key_b);
 
-        int8_t res = compare::keys(key_a.data(), key_b.data(), false);
+        int8_t res = key::compare(key_a.data(), key_b.data(), false);
         std::cout << "Test " << test_no << " (identical double): " << static_cast<int>(res) << " (expected 0)\n";
     }
 
@@ -185,7 +185,7 @@ void compare_test() {
         finsh_key(key_a);
         finsh_key(key_b);
 
-        int8_t res = compare::keys(key_a.data(), key_b.data(), false);
+        int8_t res = key::compare(key_a.data(), key_b.data(), false);
         std::cout << "Test " << test_no << " (different double): " << static_cast<int>(res) << " (expected -1)\n";
     }
 
@@ -205,7 +205,7 @@ void compare_test() {
         finsh_key(key_a);
         finsh_key(key_b);
 
-        int8_t res = compare::keys(key_a.data(), key_b.data(), false);
+        int8_t res = key::compare(key_a.data(), key_b.data(), false);
         std::cout << "Test " << test_no << " (compound string+int32 identical): " << static_cast<int>(res) << " (expected 0)\n";
     }
 
@@ -225,7 +225,7 @@ void compare_test() {
         finsh_key(key_a);
         finsh_key(key_b);
 
-        int8_t res = compare::keys(key_a.data(), key_b.data(), false);
+        int8_t res = key::compare(key_a.data(), key_b.data(), false);
         std::cout << "Test " << test_no << " (compound string+int32 differs): " << static_cast<int>(res) << " (expected -1)\n";
     }
 
@@ -245,7 +245,7 @@ void compare_test() {
         finsh_key(key_a);
         finsh_key(key_b);
 
-        int8_t res = compare::keys(key_a.data(), key_b.data(), false);
+        int8_t res = key::compare(key_a.data(), key_b.data(), false);
         std::cout << "Test " << test_no << " (compound double+int64 identical): " << static_cast<int>(res) << " (expected 0)\n";
     }
 
@@ -265,7 +265,7 @@ void compare_test() {
         finsh_key(key_a);
         finsh_key(key_b);
 
-        int8_t res = compare::keys(key_a.data(), key_b.data(), false);
+        int8_t res = key::compare(key_a.data(), key_b.data(), false);
         std::cout << "Test " << test_no << " (compound double+int64 differs): " << static_cast<int>(res) << " (expected -1)\n";
     }
 
@@ -287,7 +287,7 @@ void compare_test() {
         finsh_key(key_a);
         finsh_key(key_b);
 
-        int8_t res = compare::keys(key_a.data(), key_b.data(), false);
+        int8_t res = key::compare(key_a.data(), key_b.data(), false);
         std::cout << "Test " << test_no << " (compound double+int64+string identical): " << static_cast<int>(res) << " (expected 0)\n";
     }
 
@@ -310,7 +310,7 @@ void compare_test() {
         finsh_key(key_a);
         finsh_key(key_b);
 
-        int8_t res = compare::keys(key_a.data(), key_b.data(), true);
+        int8_t res = key::compare(key_a.data(), key_b.data(), true);
         std::cout << "Test " << test_no << " (compound double+int64+string identical): " << static_cast<int>(res) << " (expected 0)\n";
     }
 
@@ -335,7 +335,7 @@ void compare_test() {
         finsh_key(key_a);
         finsh_key(key_b);
 
-        int8_t res = compare::keys(key_a.data(), key_b.data(), true);
+        int8_t res = key::compare(key_a.data(), key_b.data(), true);
         std::cout << "Test " << test_no << " (compound double+int64+string+string identical): " << static_cast<int>(res) << " (expected 0)\n";
     }
 
@@ -360,7 +360,7 @@ void compare_test() {
         finsh_key(key_a);
         finsh_key(key_b);
 
-        int8_t res = compare::keys(key_a.data(), key_b.data(), false);
+        int8_t res = key::compare(key_a.data(), key_b.data(), false);
         std::cout << "Test " << test_no << " (compound double+int64+string+string differ): " << static_cast<int>(res) << " (expected -1)\n";
     }
 
@@ -382,7 +382,7 @@ void compare_test() {
         finsh_key(key_a);
         finsh_key(key_b);
 
-        int8_t res = compare::keys(key_a.data(), key_b.data(), false);
+        int8_t res = key::compare(key_a.data(), key_b.data(), false);
         std::cout << "Test " << test_no << " (compound mixed differ): " << static_cast<int>(res) << " (expected 1)\n";
     }
     std::cout << "========== [COMPLETED_COMPARE] ==========\n";
@@ -445,7 +445,7 @@ void create_tables() {
     uint32_t page_count = litedb::g::pages_count;
 
     std::cout << "[PAGE_COUNT]: " << page_count << std::endl;
-    litedb::table::utils::check_tree_links(root_table_page, page_count);
+    // litedb::table::utils::check_tree_links(root_table_page, page_count);
 }
 
 void find_tables() {

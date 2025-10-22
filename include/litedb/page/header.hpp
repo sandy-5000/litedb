@@ -29,9 +29,8 @@ struct page_header {
     // 8 bytes
     uint64_t max_key;
 
-    // 8 bytes
+    // 4 bytes
     uint32_t p_parent;
-    uint32_t leftmost_child;
 };
 
 }

@@ -4,9 +4,10 @@
 
 namespace litedb::constants {
 
-inline constexpr std::uint32_t DB_PAGE_SIZE        =       4096;
-inline constexpr std::uint32_t PAGE_HEADER_SIZE    =         64;
-inline constexpr std::uint32_t BUFFER_MANAGER_SIZE =      13131;
-inline constexpr std::uint32_t INVALID_PAGE_ID     = 0xffffffff;
+inline constexpr std::uint32_t DB_PAGE_SIZE        =                           4096;
+inline constexpr std::uint32_t PAGE_HEADER_SIZE    =                             64;
+inline constexpr std::uint32_t BUFFER_MANAGER_SIZE =                          13131;
+inline constexpr std::uint32_t INVALID_PAGE_ID     =                     0xffffffff;
+inline constexpr std::uint8_t  MAX_KEY[]           = {0x05, 0x00, 0x04, 0xff, 0x00};
 
 }

@@ -50,7 +50,17 @@ bool root_table::create_table(const std::string &table_name) {
         new_page.header.p_parent = 0;
         new_page.header.free_space = g::PAGE_BODY_SIZE;
         new_page.header.next_page = 0;
-        new_page.header.leftmost_child = 0;
+
+        new_page.header.free_space_offset -= sizeof(constants::MAX_KEY);
+        new_page.header.free_space -= sizeof(constants::MAX_KEY);
+        std::memcpy(
+            new_page.data_ + new_page.header.free_space_offset,
+            constants::MAX_KEY,
+            sizeof(constants::MAX_KEY)
+        );
+        uint16_t offset = new_page.header.free_space_offset;
+        std::memcpy(new_page.data_ + constants::PAGE_HEADER_SIZE, &offset, sizeof(uint16_t));
+        new_page.header.record_count = 1;
 
         new_page.write();
     }
