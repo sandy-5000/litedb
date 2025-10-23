@@ -46,4 +46,4 @@ else
     echo "Test Compilation failed."
 fi
 
-./litedb.out data.ldb
+time ./litedb.out data.ldb
