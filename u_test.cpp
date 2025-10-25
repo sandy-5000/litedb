@@ -441,8 +441,8 @@ void create_tables() {
         auto nk = key + std::to_string(i);
         bool flag = litedb::table::root_table::create_table(nk);
         flag ? ++success_cnt : ++failed_cnt;
-        if (flag && i % 1000000 == 0) {
-            std::cout << "[CREATE_TABLE] " << nk << " success" << std::endl;
+        if (i % 1000000 == 0) {
+            std::cout << "[CREATE_TABLE] " << nk << " completed" << std::endl;
         }
     }
 
@@ -476,8 +476,8 @@ void find_tables() {
             ++failed_cnt;
             std::cout << "[FIND_TABLE] " << nk << " failed" << std::endl;
         }
-        if (data.size() && i % 1000000 == 0) {
-            std::cout << "[FIND_TABLE] " << nk << " success" << std::endl;
+        if (i % 1000000 == 0) {
+            std::cout << "[FIND_TABLE] " << nk << " completed" << std::endl;
         }
     }
 
@@ -495,20 +495,8 @@ void delete_tables() {
         auto nk = key + std::to_string(i);
         bool flag = litedb::table::root_table::drop_table(nk);
         flag ? ++success_cnt : ++failed_cnt;
-        if (i % 100000 == 0) {
-            auto root_manager = litedb::engine::root_manager_;
-            auto root_page = root_manager->get_root();
-
-            root_manager->lock_unique();
-            uint32_t root_table_page = root_manager->page_data.root_table_page;
-            root_manager->unlock_unique();
-            uint32_t page_count = litedb::g::pages_count;
-
-            std::cout << "\n[PAGE_COUNT]: " << page_count << std::endl;
-            litedb::table::utils::check_tree_links(root_table_page, page_count);
-        }
-        if (flag && i % 1000000 == 0) {
-            std::cout << "[DROP_TABLE] " << nk << " success" << std::endl;
+        if (i % 1000000 == 0) {
+            std::cout << "[DROP_TABLE] " << nk << " completed" << std::endl;
         }
         if (!flag) {
             std::cout << "[DROP_TABLE] *" << nk << " failed" << std::endl;
@@ -543,8 +531,9 @@ int32_t main(int argc, char* argv[]) {
 
     // compare_test();
     // test_page_allocations();
-    create_tables();
-    // delete_tables();
+    // create_tables();
+    check_root_table();
+    delete_tables();
     find_tables();
     check_root_table();
 

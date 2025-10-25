@@ -115,7 +115,7 @@ uint64_t root_table::drop_table(const std::string &table_name) {
     root_manager->unlock_unique();
 
     if (root_table_page == 0) {
-        return false;
+        return 0;
     }
 
     uint16_t key_size =
@@ -126,7 +126,7 @@ uint64_t root_table::drop_table(const std::string &table_name) {
 
     uint16_t idx = 0;
     std::memcpy(key.data(), &key_size, sizeof(uint16_t)); idx += 2;
-    key[idx++] = 0x84;
+    key[idx++] = 0x04;
     key[idx++] = TYPE_str;
     std::memcpy(key.data() + idx, table_name.data(), name_size);
 
