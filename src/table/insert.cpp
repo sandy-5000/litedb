@@ -151,9 +151,11 @@ std::vector<std::string> split_key_page(
 
     page->header.next_page = next_page;
     std::shared_ptr<litedb::page::Page> n_page = buffer->get_page(next_page);
+    n_page->lock_unique();
     n_page->read(next_page);
     n_page->set_dirty();
     n_page->header.prev_page = page->header.id;
+    n_page->unlock_unique();
 
     {
         uint8_t key_type = keys.back()[2];

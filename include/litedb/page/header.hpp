@@ -6,7 +6,7 @@
 
 namespace litedb::page {
 
-inline constexpr uint16_t NEXT_PAGE_OFFSET = 20;
+inline constexpr uint16_t PAGE_LINK_OFFSET = 60;
 
 struct page_header {
     // 8 bytes

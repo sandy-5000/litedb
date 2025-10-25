@@ -43,7 +43,7 @@ void RootManager::free_files_list_read() {
     while (curr != 0 && free_pages_.size() < max_batch) {
         uint32_t next;
         try {
-            next = page::io::read_align<uint32_t>(curr, page::NEXT_PAGE_OFFSET);
+            next = page::io::read_align<uint32_t>(curr, page::PAGE_LINK_OFFSET);
         } catch (const std::exception& e) {
             throw std::runtime_error(std::string("[RootManger] Failed to read free page chain: ") + e.what());
         }
@@ -61,7 +61,7 @@ void RootManager::free_files_list_write() {
         free_pages_.pop_back();
         uint32_t curr = free_pages_.back();
         try {
-            page::io::write_align<uint32_t>(curr, page::NEXT_PAGE_OFFSET, next);
+            page::io::write_align<uint32_t>(curr, page::PAGE_LINK_OFFSET, next);
         } catch (const std::exception& e) {
             throw std::runtime_error(
                 std::string("[RootManger] Failed to write free page ") + std::to_string(curr) + ": " + e.what()
