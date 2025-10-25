@@ -418,7 +418,7 @@ void test_page_allocations() {
     }
 }
 
-void check_root_table() {
+void check_root_table(bool rev) {
     auto root_manager = litedb::engine::root_manager_;
     auto root_page = root_manager->get_root();
 
@@ -427,8 +427,9 @@ void check_root_table() {
     root_manager->unlock_unique();
 
     uint32_t page_count = litedb::g::pages_count;
+    std::cout << "\n[PAGE_COUNT]: " << page_count << std::endl;
 
-    litedb::table::utils::check_tree_links(root_table_page, page_count);
+    litedb::table::utils::check_tree_links(root_table_page, page_count, rev);
 }
 
 void create_tables() {
@@ -448,9 +449,6 @@ void create_tables() {
 
     std::cout << "\n[SUCCESS]: " << success_cnt << " [FAILED]: " << failed_cnt << "\n";
     std::cout << "========== [COMPLETED_INSERTS] ==========\n";
-
-    uint32_t page_count = litedb::g::pages_count;
-    std::cout << "[PAGE_COUNT]: " << page_count << std::endl;
 }
 
 void find_tables() {
@@ -531,11 +529,11 @@ int32_t main(int argc, char* argv[]) {
 
     // compare_test();
     // test_page_allocations();
-    // create_tables();
-    check_root_table();
-    delete_tables();
+    create_tables();
+    check_root_table(false);
+    check_root_table(true);
+    // delete_tables();
     find_tables();
-    check_root_table();
 
     // std::vector<uint32_t> pages = {1, 34022, 4944, 68774, 85065, 85067};
     std::vector<uint32_t> pages = {};

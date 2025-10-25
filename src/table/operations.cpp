@@ -49,6 +49,7 @@ bool root_table::create_table(const std::string &table_name) {
         new_page.header.free_space_offset = constants::DB_PAGE_SIZE;
         new_page.header.p_parent = 0;
         new_page.header.free_space = g::PAGE_BODY_SIZE;
+        new_page.header.prev_page = 0;
         new_page.header.next_page = 0;
 
         new_page.header.free_space_offset -= sizeof(constants::MAX_KEY);

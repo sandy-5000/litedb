@@ -16,21 +16,22 @@ struct page_header {
     uint16_t free_space;
 
     // 8 bytes
-    uint64_t check_sum;
-
-    // 8 bytes
     uint16_t record_count;
     uint16_t free_space_offset;
+    uint32_t p_parent;
+
+    // 8 bytes
+    uint32_t prev_page;
     uint32_t next_page;
+
+    // 8 bytes
+    uint64_t check_sum;
 
     // 8 bytes
     uint64_t lsn;
 
     // 8 bytes
     uint64_t max_key;
-
-    // 4 bytes
-    uint32_t p_parent;
 };
 
 }

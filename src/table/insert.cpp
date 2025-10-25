@@ -100,6 +100,7 @@ std::vector<std::string> split_key_page(
             new_page->header.free_space = total_free_space;
             new_page->header.type = page_type;
             new_page->header.p_parent = cur_page->header.p_parent;
+            new_page->header.prev_page = page->header.id;
 
             page->header.next_page = new_page_id;
             uint32_t c_page_id = page->header.id;
@@ -149,6 +150,10 @@ std::vector<std::string> split_key_page(
     }
 
     page->header.next_page = next_page;
+    std::shared_ptr<litedb::page::Page> n_page = buffer->get_page(next_page);
+    n_page->read(next_page);
+    n_page->set_dirty();
+    n_page->header.prev_page = page->header.id;
 
     {
         uint8_t key_type = keys.back()[2];
@@ -221,6 +226,7 @@ void add_keys_to_page(
         page->header.free_space = g::PAGE_BODY_SIZE;
         page->header.type = 0xC0;
         page->header.p_parent = 0;
+        page->header.prev_page = 0;
         page->header.next_page = 0;
     } else {
         page->read(page_id);

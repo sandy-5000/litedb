@@ -138,10 +138,10 @@ void print_slot_sizes(std::shared_ptr<litedb::page::Page> page) {
     }
 }
 
-std::pair<uint64_t, uint64_t> count_link(uint32_t page_id, uint32_t page_count) {
+std::pair<uint64_t, uint64_t> count_link(uint32_t page_id, uint32_t page_count, bool rev) {
     auto buffer = litedb::engine::buffer_manager_->get_main_buffer();
     uint64_t count = 0, c_count = 0, size = 0;
-    uint32_t last_child = 0;
+    uint32_t first_child = 0, last_child = 0;
     while (page_id > 0) {
         if (page_id > page_count) {
             std::cout << "error can't access page: " << page_id << "\n";
@@ -156,6 +156,7 @@ std::pair<uint64_t, uint64_t> count_link(uint32_t page_id, uint32_t page_count) 
         uint8_t type = page->header.type & 0xC0;
         if (type == 0xC0) {
             std::memcpy(&last_child, page->data_ + slot_ptr[page->header.record_count - 1] + 3, sizeof(uint32_t));
+            std::memcpy(&first_child, page->data_ + slot_ptr[0] + 3, sizeof(uint32_t));
         }
 
         if (true) {
@@ -177,20 +178,25 @@ std::pair<uint64_t, uint64_t> count_link(uint32_t page_id, uint32_t page_count) 
         }
         ++size;
         count += page->header.record_count;
-        page_id = page->header.next_page;
+        if (rev) {
+            page_id = page->header.prev_page;
+            std::cout << " | [first_child]: " << first_child << ", [corrupted]: " << c_count;
+        } else {
+            page_id = page->header.next_page;
+            std::cout << " | [last_child]: " << last_child << ", [corrupted]: " << c_count;
+        }
     }
-    std::cout << " | [last_child]: " << last_child << ", [corrupted]: " << c_count;
     return {count, size};
 }
 
-void check_tree_links(uint32_t root_page_id, uint32_t page_count) {
+void check_tree_links(uint32_t root_page_id, uint32_t page_count, bool rev) {
     uint32_t page_id = root_page_id;
     int depth = 0;
     while (page_id) {
         auto buffer = litedb::engine::buffer_manager_->get_main_buffer();
         std::shared_ptr<litedb::page::Page> page = buffer->get_page(page_id);
         page->read(page_id);
-        auto [count, size] = count_link(page_id, page_count);
+        auto [count, size] = count_link(page_id, page_count, rev);
         std::cout << " | Depth: " << depth << " count: " << count << " size: " << size << std::endl;
         ++depth;
         if ((page->header.type & 0xC0) == 0x80) {
@@ -199,7 +205,8 @@ void check_tree_links(uint32_t root_page_id, uint32_t page_count) {
             uint16_t* slot_ptr = reinterpret_cast<uint16_t*>(
                 page->data_ + constants::PAGE_HEADER_SIZE
             );
-            std::memcpy(&page_id, page->data_ + slot_ptr[0] + 3, sizeof(uint32_t));
+            uint16_t offset = rev ? slot_ptr[page->header.record_count - 1] : slot_ptr[0];
+            std::memcpy(&page_id, page->data_ + offset + 3, sizeof(uint32_t));
         }
     }
 }
