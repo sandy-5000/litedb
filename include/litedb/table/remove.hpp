@@ -12,6 +12,11 @@ struct delete_responce {
     std::string data;
 };
 
+struct d_node {
+    uint32_t page_id;
+    std::string key;
+};
+
 struct remove final {
     static delete_responce in_slot(uint32_t page_id, std::string &key);
 };

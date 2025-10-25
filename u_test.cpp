@@ -427,7 +427,7 @@ void check_root_table(bool rev) {
     root_manager->unlock_unique();
 
     uint32_t page_count = litedb::g::pages_count;
-    std::cout << "\n[PAGE_COUNT]: " << page_count << std::endl;
+    std::cout << "\n[ROOT_PAGE]: " << root_table_page << ", [PAGE_COUNT]: " << page_count << std::endl;
 
     litedb::table::utils::check_tree_links(root_table_page, page_count, rev);
 }
@@ -529,11 +529,13 @@ int32_t main(int argc, char* argv[]) {
 
     // compare_test();
     // test_page_allocations();
-    create_tables();
+    // create_tables();
     check_root_table(false);
     check_root_table(true);
-    // delete_tables();
+    delete_tables();
     find_tables();
+    check_root_table(false);
+    check_root_table(true);
 
     // std::vector<uint32_t> pages = {1, 34022, 4944, 68774, 85065, 85067};
     std::vector<uint32_t> pages = {};

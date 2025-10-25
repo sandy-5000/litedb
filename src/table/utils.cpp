@@ -159,8 +159,7 @@ std::pair<uint64_t, uint64_t> count_link(uint32_t page_id, uint32_t page_count, 
             std::memcpy(&first_child, page->data_ + slot_ptr[0] + 3, sizeof(uint32_t));
         }
 
-        if (true) {
-            // check for data corruption
+        {
             bool flag = false;
             uint16_t* slot_ptr = reinterpret_cast<uint16_t*>(
                 page->data_ + constants::PAGE_HEADER_SIZE
