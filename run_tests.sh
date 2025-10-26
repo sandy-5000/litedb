@@ -33,7 +33,11 @@ g++ -std=c++20 -Iinclude \
     src/table/operations.cpp \
     src/table/utils.cpp \
     \
-    u_test.cpp \
+    tests/key_compare.cpp \
+    tests/page_allocation.cpp \
+    tests/table.cpp \
+    \
+    tests/main.cpp \
     \
     -o litedb.out \
     $(pkg-config --cflags --libs libmongocxx) \

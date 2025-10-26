@@ -1,18 +1,9 @@
-#include <cstdint>
 #include <iostream>
 #include <vector>
-#include <string>
-#include <cstring>
-#include <list>
-#include <memory>
 
-#include "litedb/config.hpp"
-#include "litedb/engine/store.hpp"
-#include "litedb/engine/root_manager.hpp"
-#include "litedb/engine/buffer_manager.hpp"
+#include "tests/key_compare.hpp"
 #include "litedb/table/data_types.hpp"
 #include "litedb/table/key.hpp"
-#include "litedb/table/operations.hpp"
 #include "litedb/table/utils.hpp"
 
 
@@ -78,8 +69,6 @@ void finsh_key(std::vector<uint8_t> &key) {
     std::memcpy(key.data(), &total_size, sizeof(uint16_t));
     litedb::table::utils::print_key(reinterpret_cast<uint8_t *>(key.data()));
 }
-
-
 
 void compare_test() {
     using namespace litedb::table;
@@ -386,169 +375,4 @@ void compare_test() {
         std::cout << "Test " << test_no << " (compound mixed differ): " << static_cast<int>(res) << " (expected 1)\n";
     }
     std::cout << "========== [COMPLETED_COMPARE] ==========\n";
-}
-
-void test_page_allocations() {
-    auto buffer = litedb::engine::buffer_manager_->get_main_buffer();
-
-    int32_t no_of_pages = 100, to_free = 30, after_free = 10;
-    std::list<uint32_t> pages_;
-
-    for (int i = 0; i < no_of_pages; ++i) {
-        uint32_t new_page_id = litedb::engine::root_manager_->get_free_page();
-        std::shared_ptr<litedb::page::Page> page = buffer->get_page(new_page_id);
-        page->read_empty(new_page_id);
-        page->header.record_count = 1;
-        std::cout << new_page_id << std::endl;
-        pages_.push_back(new_page_id);
-    }
-
-    for (int i = 1; i < to_free; ++i) {
-        litedb::engine::root_manager_->add_free_page(pages_.front());
-        pages_.pop_front();
-    }
-
-    std::cout << "Fetching pages after freeing" << std::endl;
-    for (int i = 0; i < after_free; ++i) {
-        uint32_t new_page_id = litedb::engine::root_manager_->get_free_page();
-        std::shared_ptr<litedb::page::Page> page = buffer->get_page(new_page_id);
-        page->read_empty(new_page_id);
-        page->header.record_count = 1;
-        std::cout << new_page_id << std::endl;
-    }
-}
-
-void check_root_table(bool rev) {
-    auto root_manager = litedb::engine::root_manager_;
-    auto root_page = root_manager->get_root();
-
-    root_manager->lock_unique();
-    uint32_t root_table_page = root_manager->page_data.root_table_page;
-    root_manager->unlock_unique();
-
-    uint32_t page_count = litedb::g::pages_count;
-    std::cout << "\n[ROOT_PAGE]: " << root_table_page << ", [PAGE_COUNT]: " << page_count << std::endl;
-
-    litedb::table::utils::check_tree_links(root_table_page, page_count, rev);
-}
-
-void create_tables() {
-    std::cout << "\n=========== [STARTED_INSERTS] ===========\n";
-
-    std::string key = "table__";
-    uint64_t success_cnt = 0, failed_cnt = 0;
-
-    for (int i = 1; i <= 10000000; ++i) {
-        auto nk = key + std::to_string(i);
-        bool flag = litedb::table::root_table::create_table(nk);
-        flag ? ++success_cnt : ++failed_cnt;
-        if (i % 1000000 == 0) {
-            std::cout << "[CREATE_TABLE] " << nk << " completed" << std::endl;
-        }
-    }
-
-    std::cout << "\n[SUCCESS]: " << success_cnt << " [FAILED]: " << failed_cnt << "\n";
-    std::cout << "========== [COMPLETED_INSERTS] ==========\n";
-}
-
-void find_tables() {
-    std::cout << "\n=========== [STARTED_FINDS] ===========\n";
-
-    std::string key = "table__";
-    uint64_t success_cnt = 0, failed_cnt = 0, not_found_cnt = 0;
-
-    for (int i = 1; i <= 10000000; ++i) {
-        auto nk = key + std::to_string(i);
-        std::string data = litedb::table::root_table::find_table(nk);
-        if (data.size()) {
-            uint64_t seq_number;
-            std::memcpy(&seq_number, data.data() + 6 + nk.size(), sizeof(uint64_t));
-            std::string table_name(data.data() + 4, data.data() + 4 + nk.size());
-            if (seq_number + 1 == i && nk == table_name) {
-                ++success_cnt;
-            } else {
-                ++not_found_cnt;
-                // std::cout << "[FIND_TABLE] " << nk << " failed" << std::endl;
-            }
-        } else {
-            ++failed_cnt;
-            std::cout << "[FIND_TABLE] " << nk << " failed" << std::endl;
-        }
-        if (i % 1000000 == 0) {
-            std::cout << "[FIND_TABLE] " << nk << " completed" << std::endl;
-        }
-    }
-
-    std::cout << "\n[SUCCESS]: " << success_cnt << " [FAILED]: " << failed_cnt << " [NOT_FOUND]: " << not_found_cnt << "\n";
-    std::cout << "========== [COMPLETED_FINDS] ==========\n";
-}
-
-void delete_tables() {
-    std::cout << "\n=========== [STARTED_DELETES] ===========\n";
-
-    std::string key = "table__";
-    uint64_t success_cnt = 0, failed_cnt = 0;
-
-    for (int i = 1; i <= 10000000; ++i) {
-        auto nk = key + std::to_string(i);
-        bool flag = litedb::table::root_table::drop_table(nk);
-        flag ? ++success_cnt : ++failed_cnt;
-        if (i % 1000000 == 0) {
-            std::cout << "[DROP_TABLE] " << nk << " completed" << std::endl;
-        }
-        if (!flag) {
-            std::cout << "[DROP_TABLE] *" << nk << " failed" << std::endl;
-        }
-    }
-
-    std::cout << "\n[SUCCESS]: " << success_cnt << " [FAILED]: " << failed_cnt << "\n";
-    std::cout << "========== [COMPLETED_DELETES] ==========\n";
-}
-
-int32_t main(int argc, char* argv[]) {
-    if (argc < 2) {
-        std::cout << "For storing needed a file path <file_name>.ldb" << std::endl;
-        return 0;
-    }
-
-    std::string file_path = std::string(argv[1]);
-
-    try {
-        litedb::config::init_db_path(argv[1]);
-
-        static litedb::engine::root_manager::RootManager rootManager;
-        static litedb::engine::buffer_manager::BufferManager bufferManager;
-        litedb::engine::root_manager_ = &rootManager;
-        litedb::engine::buffer_manager_ = &bufferManager;
-
-        litedb::config::print_hardware_config();
-    } catch (const std::exception& ex) {
-        std::cerr << "Error: " << ex.what() << "\n";
-        return 1;
-    }
-
-    // compare_test();
-    // test_page_allocations();
-    // create_tables();
-    check_root_table(false);
-    check_root_table(true);
-    delete_tables();
-    find_tables();
-    check_root_table(false);
-    check_root_table(true);
-
-    // std::vector<uint32_t> pages = {1, 34022, 4944, 68774, 85065, 85067};
-    std::vector<uint32_t> pages = {};
-    for (auto i : pages) {
-        std::cout << "page: " << i << std::endl;
-        auto buffer = litedb::engine::buffer_manager_->get_main_buffer();
-        std::shared_ptr<litedb::page::Page> page = buffer->get_page(i);
-        page->read(i);
-        page->print_header();
-        // litedb::table::utils::print_slot_page(page);
-    }
-
-    std::cout << std::endl;
-
-    return 0;
 }
